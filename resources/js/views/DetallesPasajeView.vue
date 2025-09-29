@@ -4,11 +4,11 @@
     <div class="header-section">
       <h2>Detalles del pasaje</h2>
       <div class="header-actions">
-        <button @click="generarPDFTiempoReal" class="btn-pdf" :disabled="!puedeGenerarPDF">
-          <i class="fas fa-file-pdf"></i>
-          Generar PDF
+        <button @click="generarImagenTiempoReal" class="btn-imagen" :disabled="!puedeGenerarImagen">
+          <i class="fas fa-image"></i>
+          Generar Imagen
         </button>
-        <button @click="imprimirTicketVenta" class="btn-ticket" :disabled="!puedeGenerarPDF">
+        <button @click="imprimirTicketVenta" class="btn-ticket" :disabled="!puedeGenerarImagen">
           <i class="fas fa-print"></i>
           Imprimir ticket de venta
         </button>
@@ -64,7 +64,7 @@
         <div class="form-column">
           <div class="form-group">
             <label for="embarcacion">Embarcación:</label>
-            <select id="embarcacion" v-model="datosViaje.embarcacion" class="form-select" @change="validarPDF">
+            <select id="embarcacion" v-model="datosViaje.embarcacion" class="form-select" @change="validarImagen">
               <option value="">Seleccionar embarcación</option>
               <option v-for="embarcacion in embarcaciones" :key="embarcacion" :value="embarcacion">
                 {{ embarcacion }}
@@ -74,7 +74,7 @@
 
           <div class="form-group">
             <label for="puertoEmbarque">Puerto de embarque:</label>
-            <select id="puertoEmbarque" v-model="datosViaje.puertoEmbarque" class="form-select" @change="validarPDF">
+            <select id="puertoEmbarque" v-model="datosViaje.puertoEmbarque" class="form-select" @change="validarImagen">
               <option value="">Seleccionar puerto</option>
               <option v-for="puerto in puertosEmbarque" :key="puerto" :value="puerto">
                 {{ puerto }}
@@ -84,7 +84,7 @@
 
           <div class="form-group">
             <label for="horaEmbarque">Hora de embarque:</label>
-            <select id="horaEmbarque" v-model="datosViaje.horaEmbarque" class="form-select" @change="validarPDF">
+            <select id="horaEmbarque" v-model="datosViaje.horaEmbarque" class="form-select" @change="validarImagen">
               <option value="">Seleccionar hora</option>
               <option v-for="hora in horasDisponibles" :key="hora" :value="hora">
                 {{ hora }}
@@ -94,7 +94,7 @@
 
           <div class="form-group">
             <label for="horaSalida">Hora de salida:</label>
-            <select id="horaSalida" v-model="datosViaje.horaSalida" class="form-select" @change="validarPDF">
+            <select id="horaSalida" v-model="datosViaje.horaSalida" class="form-select" @change="validarImagen">
               <option value="">Seleccionar hora</option>
               <option v-for="hora in horasDisponibles" :key="hora" :value="hora">
                 {{ hora }}
@@ -112,7 +112,7 @@
                   id="efectivo" 
                   value="efectivo" 
                   v-model="datosViaje.medioPago"
-                  @change="validarPDF"
+                  @change="validarImagen"
                 >
                 <label for="efectivo">Efectivo</label>
               </div>
@@ -122,7 +122,7 @@
                   id="yape" 
                   value="yape" 
                   v-model="datosViaje.medioPago"
-                  @change="validarPDF"
+                  @change="validarImagen"
                 >
                 <label for="yape">Yape</label>
               </div>
@@ -132,7 +132,7 @@
                   id="plin" 
                   value="plin" 
                   v-model="datosViaje.medioPago"
-                  @change="validarPDF"
+                  @change="validarImagen"
                 >
                 <label for="plin">Plin</label>
               </div>
@@ -142,7 +142,7 @@
                 type="checkbox" 
                 id="pagoMixto" 
                 v-model="datosViaje.pagoMixto"
-                @change="validarPDF"
+                @change="validarImagen"
               >
               <label for="pagoMixto">Pago Mixto</label>
             </div>
@@ -260,7 +260,7 @@
               class="form-textarea"
               rows="4"
               placeholder="Ingrese observaciones o notas adicionales sobre el viaje..."
-              @input="validarPDF"
+              @input="validarImagen"
             ></textarea>
           </div>
         </div>
@@ -468,7 +468,7 @@ export default {
       tipoMensaje: 'success',
       mensajeCarga: 'Procesando...',
       detalleActualId: null,
-      puedeGenerarPDF: false,
+      puedeGenerarImagen: false,
       
       // Modales
       mostrarModalEfectivo: false,
@@ -490,7 +490,7 @@ export default {
         plin: 0
       },
       
-      // Lista de embarcaciones
+      // Lista de embarcaciones - valores por defecto + carga desde API
       embarcaciones: [
         'KAORY',
         'DON JULIO',
@@ -509,7 +509,7 @@ export default {
         'DOÑA LIDIA'
       ],
 
-      // Puertos de embarque actualizados
+      // Puertos de embarque - valores por defecto + carga desde API
       puertosEmbarque: [
         'CALLE PEVAS #456',
         'CALLE PEVAS #408',
@@ -592,22 +592,223 @@ export default {
 
   mounted() {
     console.log('🚀 Componente DetallesPasajeView montado')
+    
+    // Asegurar que las listas están disponibles inmediatamente
+    this.inicializarListas()
+    
     // Cargar datos automáticamente cuando se monte el componente
     this.cargarDatosDesdeFormulario()
+    
     // Cargar datos del cliente
     this.cargarDatosCliente()
+    
+    // Verificar nuevos datos del formulario
+    this.verificarNuevosDatosFormulario()
+    
+    // Intentar cargar datos adicionales de APIs (opcional)
+    this.cargarEmbarcacionesYPuertos()
   },
 
   methods: {
+    // NUEVO: Inicializar listas con valores por defecto
+    inicializarListas() {
+      console.log('📋 Inicializando listas de embarcaciones y puertos...')
+      
+      // Verificar si las listas están vacías y llenarlas
+      if (this.embarcaciones.length === 0) {
+        this.embarcaciones = [
+          'KAORY',
+          'DON JULIO',
+          'ORIENTE 1',
+          'HAYDEE',
+          'MACHI MACHIN',
+          'MAGIN',
+          'TONY',
+          'CRISTIAN',
+          'ALEAXIA',
+          'ROMERO',
+          'NR',
+          'VALERIA 1',
+          'ZOE ALEXA',
+          'RAYZA',
+          'DOÑA LIDIA'
+        ]
+      }
+
+      if (this.puertosEmbarque.length === 0) {
+        this.puertosEmbarque = [
+          'CALLE PEVAS #456',
+          'CALLE PEVAS #408',
+          'CALLE REQUENA #155',
+          'CALLE ABTAO #1350',
+          'PUERTO PRINCIPAL DE NAUTA',
+          'CALLE JR LIMA #712 (NAUTA)',
+          'PUERTO LA BOCA',
+          'PUERTO MAGIN',
+          'LA CAPITANIA',
+          'PUERTO DIEGUITO',
+          'PUERTO SAJUTA',
+          'LA CASONA DE SAJUTA',
+          'PUERTO RELOJ PÚBLICO',
+          'PUERTO GANZO AZUL',
+          'LA BALSA MUNICIPAL',
+          'FITZCARRALD #377',
+          'PUERTO MANAOS',
+          'CALLE NAUTA #342',
+          'PUERTO PRINCIPAL DE'
+        ]
+      }
+
+      console.log('✅ Listas inicializadas:', {
+        embarcaciones: this.embarcaciones.length,
+        puertos: this.puertosEmbarque.length
+      })
+    },
+
+    // CORREGIDO: Cargar embarcaciones y puertos desde la API
+    async cargarEmbarcacionesYPuertos() {
+      try {
+        console.log('📡 Intentando cargar embarcaciones y puertos desde la API...')
+        
+        // Intentar cargar embarcaciones
+        try {
+          const responseEmbarcaciones = await fetch('/api/embarcaciones', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+          })
+
+          if (responseEmbarcaciones.ok) {
+            const resultEmbarcaciones = await responseEmbarcaciones.json()
+            if (resultEmbarcaciones.success && resultEmbarcaciones.data) {
+              const embarcacionesAPI = resultEmbarcaciones.data.map(embarcacion => embarcacion.nombre)
+              
+              // Agregar nuevas embarcaciones que no estén en la lista original
+              embarcacionesAPI.forEach(embarcacion => {
+                if (!this.embarcaciones.includes(embarcacion)) {
+                  this.embarcaciones.push(embarcacion)
+                }
+              })
+              
+              console.log('✅ Embarcaciones actualizadas desde API')
+            }
+          }
+        } catch (errorEmbarcaciones) {
+          console.log('⚠️ API de embarcaciones no disponible, usando valores por defecto')
+        }
+
+        // Intentar cargar puertos de embarque
+        try {
+          const responsePuertos = await fetch('/api/puertos-embarque', {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+          })
+
+          if (responsePuertos.ok) {
+            const resultPuertos = await responsePuertos.json()
+            if (resultPuertos.success && resultPuertos.data) {
+              const puertosAPI = resultPuertos.data.map(puerto => puerto.nombre)
+              
+              // Agregar nuevos puertos que no estén en la lista original
+              puertosAPI.forEach(puerto => {
+                if (!this.puertosEmbarque.includes(puerto)) {
+                  this.puertosEmbarque.push(puerto)
+                }
+              })
+              
+              console.log('✅ Puertos actualizados desde API')
+            }
+          }
+        } catch (errorPuertos) {
+          console.log('⚠️ API de puertos no disponible, usando valores por defecto')
+        }
+
+        // Verificar si hay nuevos datos desde el formulario de agregación
+        this.verificarNuevosDatosFormulario()
+        
+      } catch (error) {
+        console.log('ℹ️ APIs no disponibles, continuando con valores por defecto')
+        // Los valores por defecto ya están cargados, así que continuamos normalmente
+        this.verificarNuevosDatosFormulario()
+      }
+    },
+
+    // MEJORADO: Verificar y agregar datos del formulario de agregación
+    verificarNuevosDatosFormulario() {
+      console.log('🔍 Verificando nuevos datos desde formulario...')
+      
+      let huboActualizacion = false
+      
+      // Verificar si hay una nueva embarcación desde el formulario
+      // CORREGIDO: Usar los nombres correctos que guarda AgregarDetalleView
+      const nuevaEmbarcacion = sessionStorage.getItem('nuevaEmbarcacion') || 
+                              sessionStorage.getItem('nuevaEmbarcacionAgregada')
+      if (nuevaEmbarcacion && nuevaEmbarcacion.trim() !== '') {
+        if (!this.embarcaciones.includes(nuevaEmbarcacion)) {
+          this.embarcaciones.push(nuevaEmbarcacion)
+          huboActualizacion = true
+        }
+        // Seleccionar automáticamente la nueva embarcación
+        this.datosViaje.embarcacion = nuevaEmbarcacion
+        console.log('🚢 Nueva embarcación agregada automáticamente:', nuevaEmbarcacion)
+        this.mostrarMensaje(`Embarcación "${nuevaEmbarcacion}" agregada automáticamente`, 'success')
+        // Limpiar ambos sessionStorage
+        sessionStorage.removeItem('nuevaEmbarcacion')
+        sessionStorage.removeItem('nuevaEmbarcacionAgregada')
+      }
+
+      // Verificar si hay un nuevo puerto desde el formulario
+      // CORREGIDO: Usar los nombres correctos que guarda AgregarDetalleView
+      const nuevoPuerto = sessionStorage.getItem('nuevoPuertoEmbarque') || 
+                         sessionStorage.getItem('nuevoPuertoAgregado')
+      if (nuevoPuerto && nuevoPuerto.trim() !== '') {
+        if (!this.puertosEmbarque.includes(nuevoPuerto)) {
+          this.puertosEmbarque.push(nuevoPuerto)
+          huboActualizacion = true
+        }
+        // Seleccionar automáticamente el nuevo puerto
+        this.datosViaje.puertoEmbarque = nuevoPuerto
+        console.log('⚓ Nuevo puerto agregado automáticamente:', nuevoPuerto)
+        this.mostrarMensaje(`Puerto "${nuevoPuerto}" agregado automáticamente`, 'success')
+        // Limpiar ambos sessionStorage
+        sessionStorage.removeItem('nuevoPuertoEmbarque')
+        sessionStorage.removeItem('nuevoPuertoAgregado')
+      }
+
+      // Validar imagen después de agregar nuevos datos
+      if (huboActualizacion) {
+        this.validarImagen()
+        // Forzar actualización del DOM
+        this.$forceUpdate()
+      }
+
+      console.log('📊 Estado actual de listas:', {
+        embarcaciones: this.embarcaciones.length,
+        puertos: this.puertosEmbarque.length,
+        embarcacionSeleccionada: this.datosViaje.embarcacion,
+        puertoSeleccionado: this.datosViaje.puertoEmbarque
+      })
+    },
+
     // Nuevos métodos para manejo de medios de pago
     seleccionarMedioPago(tipo) {
       this.datosViaje.medioPago = tipo
       this.datosViaje.pagoMixto = false
-      this.validarPDF()
+      this.limpiarPagoMixto()
+      this.validarImagen()
       
-      // Mostrar modal de efectivo si es necesario
+      // Configurar detalle según tipo de pago
       if (tipo === 'efectivo') {
         this.abrirModalEfectivo()
+      } else {
+        this.datosViaje.detallesPago = `${this.getPaymentLabel(tipo)}: S/ ${this.totalGeneral.toFixed(2)}`
       }
     },
 
@@ -621,7 +822,7 @@ export default {
         this.limpiarPagoMixto()
       }
       
-      this.validarPDF()
+      this.validarImagen()
     },
 
     // Modal de Efectivo
@@ -689,8 +890,23 @@ export default {
         }
         
         this.datosViaje.detallesPago = detalles.join(' + ')
+        
+        // CORREGIDO: Asegurar que el pago mixto se marque correctamente
+        this.datosViaje.pagoMixto = true
+        this.datosViaje.medioPago = 'mixto'
+        
         this.mostrarMensaje('Pago mixto configurado correctamente', 'success')
         this.cerrarModalPagoMixto()
+        
+        // Validar después de configurar
+        this.validarImagen()
+        
+        console.log('✅ Pago mixto confirmado:', {
+          pagoMixto: this.datosViaje.pagoMixto,
+          medioPago: this.datosViaje.medioPago,
+          detalles: this.datosViaje.detallesPago,
+          montos: this.pagoMixtoDetalle
+        })
       }
     },
 
@@ -700,7 +916,9 @@ export default {
         yape: 0,
         plin: 0
       }
-      this.datosViaje.detallesPago = ''
+      if (!this.datosViaje.medioPago) {
+        this.datosViaje.detallesPago = ''
+      }
     },
 
     // Métodos auxiliares
@@ -739,7 +957,7 @@ export default {
           this.datosViaje.nacionalidadCliente = cliente.nacionalidad || 'PERUANA'
           
           this.mostrarMensaje('Datos del cliente cargados automáticamente', 'info')
-          this.validarPDF()
+          this.validarImagen()
         } catch (error) {
           console.error('❌ Error al cargar datos del cliente:', error)
           this.mostrarMensaje('Error al cargar los datos del cliente', 'warning')
@@ -750,337 +968,408 @@ export default {
       }
     },
 
-    // Validar si se puede generar PDF
-    validarPDF() {
-      this.puedeGenerarPDF = this.detallesPasaje.length > 0 && 
-                            this.datosViaje.embarcacion && 
-                            this.datosViaje.puertoEmbarque &&
-                            this.datosViaje.horaEmbarque &&
-                            this.datosViaje.horaSalida
+    // ACTUALIZADO: Validar si se puede generar imagen
+    validarImagen() {
+      const camposBasicos = this.detallesPasaje.length > 0 && 
+                           this.datosViaje.embarcacion && 
+                           this.datosViaje.puertoEmbarque &&
+                           this.datosViaje.horaEmbarque &&
+                           this.datosViaje.horaSalida
 
-      console.log('📋 Validación PDF:', {
+      // Validar medio de pago
+      let medioPagoValido = false
+      
+      if (this.datosViaje.pagoMixto) {
+        // Para pago mixto, verificar que esté configurado
+        medioPagoValido = this.datosViaje.detallesPago && 
+                         this.datosViaje.detallesPago.trim() !== '' &&
+                         (this.pagoMixtoDetalle.efectivo > 0 || 
+                          this.pagoMixtoDetalle.yape > 0 || 
+                          this.pagoMixtoDetalle.plin > 0)
+      } else {
+        // Para pago simple, verificar que haya medio de pago
+        medioPagoValido = this.datosViaje.medioPago && 
+                         this.datosViaje.medioPago.trim() !== ''
+      }
+
+      this.puedeGenerarImagen = camposBasicos && medioPagoValido
+
+      console.log('📋 Validación Imagen:', {
         tieneDetalles: this.detallesPasaje.length > 0,
         embarcacion: !!this.datosViaje.embarcacion,
         puerto: !!this.datosViaje.puertoEmbarque,
         horaEmbarque: !!this.datosViaje.horaEmbarque,
         horaSalida: !!this.datosViaje.horaSalida,
-        puedeGenerar: this.puedeGenerarPDF
-      })
-    },
-
-    // Imprimir Ticket de Venta (MEJORADO CON DEBUGGING)
-    async imprimirTicketVenta() {
-      console.log('🎫 Iniciando generación de ticket de venta...')
-      
-      if (!this.puedeGenerarPDF) {
-        this.mostrarMensaje('Complete todos los campos obligatorios para imprimir el ticket', 'warning')
-        return
-      }
-
-      // Validar que tenemos datos del pasaje
-      if (this.detallesPasaje.length === 0) {
-        this.mostrarMensaje('No hay detalles de pasaje para generar el ticket', 'error')
-        return
-      }
-
-      try {
-        this.cargando = true
-        this.mensajeCarga = 'Generando ticket de venta...'
-        
-        // Preparar datos completos para el ticket
-        const datosCompletos = this.prepararDatosParaTicket()
-        
-        console.log('🎫 Datos preparados para ticket:', JSON.stringify(datosCompletos, null, 2))
-
-        // Verificar que todos los campos obligatorios estén presentes
-        const camposObligatorios = [
-          'numero_ticket', 'fecha_emision', 'hora_emision', 
-          'nombre_cliente', 'cantidad', 'descripcion', 
-          'precio_unitario', 'total', 'embarcacion'
-        ]
-        
-        const camposFaltantes = camposObligatorios.filter(campo => 
-          !datosCompletos[campo] || datosCompletos[campo] === 'N/A'
-        )
-        
-        if (camposFaltantes.length > 0) {
-          console.error('❌ Campos faltantes:', camposFaltantes)
-          this.mostrarMensaje(`Faltan campos obligatorios: ${camposFaltantes.join(', ')}`, 'error')
-          return
-        }
-
-        console.log('✅ Validación de campos completada, enviando request...')
-
-        // Llamada al endpoint de ticket de venta
-        const response = await fetch('/api/pasajes/generar-ticket-venta', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'text/html',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-          },
-          body: JSON.stringify(datosCompletos)
-        })
-
-        console.log('📥 Respuesta del servidor:', {
-          status: response.status, 
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        })
-
-        if (response.ok) {
-          // Obtener el HTML del ticket
-          const htmlContent = await response.text()
-          console.log('✅ HTML del ticket recibido, longitud:', htmlContent.length)
-          
-          // Crear una nueva ventana para mostrar el ticket
-          const ticketWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes')
-          
-          if (ticketWindow) {
-            ticketWindow.document.write(htmlContent)
-            ticketWindow.document.close()
-            
-            // Enfocar la ventana del ticket
-            ticketWindow.focus()
-            
-            this.mostrarMensaje('Ticket de venta generado exitosamente', 'success')
-          } else {
-            throw new Error('No se pudo abrir la ventana del ticket. Verifique que el bloqueador de ventanas emergentes esté desactivado.')
-          }
-        } else {
-          // Error del servidor - obtener detalles
-          let errorText = ''
-          try {
-            const contentType = response.headers.get('content-type')
-            if (contentType && contentType.includes('application/json')) {
-              const errorJson = await response.json()
-              errorText = JSON.stringify(errorJson, null, 2)
-              console.error('❌ Error JSON del servidor:', errorJson)
-              
-              // Si hay errores de validación específicos
-              if (errorJson.errors) {
-                const erroresValidacion = Object.entries(errorJson.errors)
-                  .map(([campo, mensajes]) => `${campo}: ${mensajes.join(', ')}`)
-                  .join('\n')
-                this.mostrarMensaje(`Errores de validación:\n${erroresValidacion}`, 'error')
-                return
-              }
-            } else {
-              errorText = await response.text()
-            }
-          } catch (parseError) {
-            errorText = 'No se pudo obtener detalles del error'
-            console.error('❌ Error al parsear respuesta de error:', parseError)
-          }
-          
-          console.error('❌ Error del servidor:', {
-            status: response.status,
-            statusText: response.statusText,
-            errorText: errorText
-          })
-          
-          throw new Error(`Error ${response.status}: ${response.statusText}\nDetalles: ${errorText}`)
-        }
-
-      } catch (error) {
-        console.error('❌ Error generando ticket:', error)
-        this.mostrarMensaje(`Error al generar el ticket: ${error.message}`, 'error')
-      } finally {
-        this.cargando = false
-      }
-    },
-
-    // Preparar datos para el ticket de venta
-    prepararDatosParaTicket() {
-      const ahora = new Date()
-      const fechaActual = this.formatearFecha(ahora)
-      const horaActual = this.formatearHoraTicket(ahora)
-      
-      const primerDetalle = this.detallesPasaje[0]
-      
-      // Validar que tenemos todos los datos necesarios
-      if (!primerDetalle) {
-        throw new Error('No hay detalles de pasaje disponibles')
-      }
-      
-      // Determinar el medio de pago para el ticket 
-      // Basado en los valores que acepta el backend
-      let medioPagoTicket = 'efectivo'  // valor por defecto
-      let esPagoMixto = false
-      
-      if (this.datosViaje.pagoMixto) {
-        // Para pago mixto, usar "pago mixto" (el backend debe aceptar este valor)
-        medioPagoTicket = 'pago mixto'
-        esPagoMixto = true
-      } else if (this.datosViaje.medioPago) {
-        // Si hay un medio de pago específico seleccionado
-        switch(this.datosViaje.medioPago.toLowerCase()) {
-          case 'efectivo':
-            medioPagoTicket = 'efectivo'
-            break
-          case 'yape':
-            medioPagoTicket = 'yape'
-            break
-          case 'plin':
-            medioPagoTicket = 'plin'
-            break
-          default:
-            medioPagoTicket = 'efectivo'
-        }
-      }
-      
-      console.log('💳 Medio de pago determinado para ticket:', {
         pagoMixto: this.datosViaje.pagoMixto,
         medioPago: this.datosViaje.medioPago,
-        resultado: medioPagoTicket,
-        esPagoMixto: esPagoMixto
+        detallesPago: this.datosViaje.detallesPago,
+        medioPagoValido: medioPagoValido,
+        puedeGenerar: this.puedeGenerarImagen
       })
-      
-      return {
-        // Datos del ticket - campos obligatorios
-        numero_ticket: this.generarNumeroTicket(),
-        fecha_emision: fechaActual,
-        hora_emision: horaActual,
-        
-        // ESTRUCTURA CLIENTE COMO OBJETO ANIDADO (requerido por backend)
-        cliente: {
-          nombre: this.datosViaje.nombreCliente || 'CLIENTE',
-          documento: this.datosViaje.documentoCliente || 'N/A',
-          contacto: this.datosViaje.contactoCliente || 'N/A',
-          nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
-        },
-        
-        // También mantener campos planos por compatibilidad
-        nombre_cliente: this.datosViaje.nombreCliente || 'CLIENTE',
-        documento_cliente: this.datosViaje.documentoCliente || 'N/A',
-        contacto_cliente: this.datosViaje.contactoCliente || 'N/A',
-        nacionalidad_cliente: this.datosViaje.nacionalidadCliente || 'PERUANA',
-        
-        // Datos del pasaje - validados
-        cantidad: parseInt(primerDetalle.cantidad) || 1,
-        descripcion: primerDetalle.descripcion || 'Pasaje',
-        precio_unitario: parseFloat(primerDetalle.precio_unitario || 0).toFixed(2),
-        subtotal: parseFloat(primerDetalle.subtotal || 0).toFixed(2),
-        total: this.totalGeneral.toFixed(2),
-        
-        // Datos del viaje - con validaciones
-        fecha_viaje: fechaActual,
-        embarcacion: this.datosViaje.embarcacion || 'N/A',
-        puerto_embarque: this.datosViaje.puertoEmbarque || 'N/A',
-        hora_embarque: this.datosViaje.horaEmbarque || 'N/A',
-        hora_salida: this.datosViaje.horaSalida || 'N/A',
-        
-        // MEDIO DE PAGO - PROBANDO DIFERENTES VALORES
-        medio_pago: medioPagoTicket,
-        pago_mixto: esPagoMixto,
-        detalles_pago: this.datosViaje.detallesPago || '',
-        
-        nota: this.datosViaje.nota || '',
-        
-        // Campos adicionales que podrían ser requeridos
-        destino: primerDetalle.destino || primerDetalle.descripcion || 'N/A',
-        ruta: primerDetalle.ruta || primerDetalle.descripcion || 'N/A',
-        operador: 'ROCÍO TRAVEL'
-      }
     },
 
-    // Generar número de ticket único
-    generarNumeroTicket() {
-      const ahora = new Date()
-      const año = ahora.getFullYear().toString().slice(-2)
-      const mes = String(ahora.getMonth() + 1).padStart(2, '0')
-      const dia = String(ahora.getDate()).padStart(2, '0')
-      const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+    // CORREGIDO: Generar imagen en tiempo real - descarga automática JPG
+    async generarImagenTiempoReal() {
+      console.log('🖼️ Iniciando generación de imagen tiempo real...')
       
-      return `NV-${año}${mes}${dia}${random}`
-    },
-
-    // Formatear hora para ticket (formato 24 horas)
-    formatearHoraTicket(fecha) {
-      const horas = String(fecha.getHours()).padStart(2, '0')
-      const minutos = String(fecha.getMinutes()).padStart(2, '0')
-      const segundos = String(fecha.getSeconds()).padStart(2, '0')
-      
-      return `${horas}:${minutos}:${segundos}`
-    },
-
-    // Generar PDF en tiempo real SIN GUARDAR
-    async generarPDFTiempoReal() {
-      console.log('🔥 Iniciando generación PDF tiempo real...')
-      
-      if (!this.puedeGenerarPDF) {
-        this.mostrarMensaje('Complete todos los campos obligatorios: embarcación, puerto, horas de embarque y salida', 'warning')
+      if (!this.puedeGenerarImagen) {
+        this.mostrarMensaje('Complete todos los campos obligatorios: embarcación, puerto, horas y medio de pago', 'warning')
         return
       }
 
       try {
         this.cargando = true
-        this.mensajeCarga = 'Generando PDF en tiempo real...'
+        this.mensajeCarga = 'Generando imagen del pasaje...'
         
-        // Preparar datos completos para el PDF
-        const datosCompletos = this.prepararDatosParaPDF()
+        const datosCompletos = this.prepararDatosParaImagen()
         
-        console.log('📤 Enviando datos para PDF:', datosCompletos)
+        console.log('📤 Enviando datos para imagen:', datosCompletos)
 
-        // Llamada al endpoint de PDF en tiempo real
-        const response = await fetch('/api/pasajes/generar-pdf-tiempo-real', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/pdf',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-          },
-          body: JSON.stringify(datosCompletos)
-        })
+        // Lista de rutas a intentar en orden de prioridad
+        const rutasParaProbar = [
+          '/imagen-boleta',                           // Ruta temporal funcional
+          '/api/pasajes/generar-imagen-tiempo-real',  // Ruta API principal
+          '/generar-imagen-pasaje'                    // Ruta directa
+        ]
 
-        console.log('📥 Respuesta del servidor:', response.status, response.statusText)
+        let response = null
+        let rutaUsada = null
 
-        if (response.ok) {
-          // Descargar PDF
+        // Intentar cada ruta hasta que una funcione
+        for (const ruta of rutasParaProbar) {
+          try {
+            console.log(`🔄 Intentando ruta: ${ruta}`)
+            
+            response = await fetch(ruta, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': '*/*',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+              },
+              body: JSON.stringify(datosCompletos)
+            })
+
+            if (response.ok) {
+              rutaUsada = ruta
+              break
+            } else if (response.status === 405) {
+              console.log(`❌ Ruta ${ruta} no permite POST, probando siguiente...`)
+              continue
+            } else {
+              console.log(`⚠️ Ruta ${ruta} respondió con status ${response.status}`)
+              continue
+            }
+          } catch (error) {
+            console.log(`❌ Error en ruta ${ruta}:`, error.message)
+            continue
+          }
+        }
+
+        if (!response || !response.ok) {
+          throw new Error('Ninguna ruta de generación de imagen está disponible. Verifica la configuración del servidor.')
+        }
+
+        console.log(`✅ Imagen generada usando ruta: ${rutaUsada}`)
+
+        // Procesar la respuesta y convertir a JPG
+        const contentType = response.headers.get('content-type')
+        
+        if (contentType && contentType.includes('text/html')) {
+          // Respuesta HTML - convertir a imagen JPG
+          const htmlContent = await response.text()
+          console.log('📄 HTML recibido, convirtiendo a JPG...')
+          
+          await this.convertirHtmlAImagenJPG(htmlContent)
+        } else if (contentType && contentType.includes('application/json')) {
+          // Respuesta JSON con base64
+          const result = await response.json()
+          
+          if (result.success && result.imagen_base64) {
+            this.procesarImagenBase64(result.imagen_base64)
+          } else {
+            throw new Error(result.message || 'Error al generar la imagen')
+          }
+        } else if (contentType && (contentType.includes('image/jpeg') || contentType.includes('image/png'))) {
+          // Respuesta directa de imagen
           const blob = await response.blob()
-          const url = window.URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          
-          // Generar nombre de archivo con fecha y hora
-          const fecha = new Date()
-          const nombreArchivo = `pasaje-${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}-${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}.pdf`
-          
-          link.download = nombreArchivo
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          window.URL.revokeObjectURL(url)
-          
-          this.mostrarMensaje('PDF generado exitosamente', 'success')
+          this.descargarImagen(blob)
         } else {
-          const errorText = await response.text()
-          console.error('Error del servidor:', errorText)
-          throw new Error(`Error ${response.status}: ${response.statusText}`)
+          throw new Error('Tipo de respuesta no reconocido')
         }
 
       } catch (error) {
-        console.error('Error generando PDF:', error)
-        this.mostrarMensaje(`Error al generar el PDF: ${error.message}`, 'error')
+        console.error('Error generando imagen:', error)
+        this.mostrarMensaje(`Error al generar la imagen: ${error.message}`, 'error')
       } finally {
         this.cargando = false
       }
     },
 
-    // Preparar datos para el PDF con fecha y hora actual
-    prepararDatosParaPDF() {
+    // NUEVO: Convertir HTML a imagen JPG y descargar automáticamente
+    async convertirHtmlAImagenJPG(htmlContent) {
+      try {
+        // Crear un iframe oculto para renderizar el HTML
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'absolute'
+        iframe.style.left = '-9999px'
+        iframe.style.width = '800px'
+        iframe.style.height = '1000px'
+        iframe.style.border = 'none'
+        iframe.style.background = 'white'
+        document.body.appendChild(iframe)
+        
+        // Escribir el HTML en el iframe
+        iframe.contentDocument.open()
+        iframe.contentDocument.write(htmlContent)
+        iframe.contentDocument.close()
+        
+        // Esperar a que se cargue completamente
+        await new Promise(resolve => {
+          iframe.onload = resolve
+          setTimeout(resolve, 2000) // Timeout de seguridad
+        })
+        
+        // Verificar si html2canvas está disponible
+        if (window.html2canvas) {
+          console.log('📷 Usando html2canvas para generar JPG...')
+          
+          const canvas = await html2canvas(iframe.contentDocument.body, {
+            backgroundColor: '#ffffff',
+            scale: 2, // Mayor calidad
+            useCORS: true,
+            allowTaint: true,
+            width: 800,
+            height: 1000
+          })
+          
+          // Convertir canvas a blob JPG
+          canvas.toBlob((blob) => {
+            this.descargarImagenJPG(blob)
+            document.body.removeChild(iframe)
+          }, 'image/jpeg', 0.9) // Calidad 90%
+          
+        } else {
+          console.log('📷 html2canvas no disponible, usando método alternativo...')
+          
+          // Método alternativo: crear imagen desde el DOM
+          await this.crearImagenDesdeDOM(iframe.contentDocument.body)
+          document.body.removeChild(iframe)
+        }
+        
+      } catch (error) {
+        console.error('Error convirtiendo HTML a JPG:', error)
+        this.mostrarMensaje('Error al convertir la boleta a imagen JPG', 'error')
+      }
+    },
+
+    // NUEVO: Crear imagen desde DOM (método alternativo)
+    async crearImagenDesdeDOM(elemento) {
+      try {
+        // Crear un canvas manualmente
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        // Configurar tamaño del canvas
+        canvas.width = 800
+        canvas.height = 1000
+        
+        // Fondo blanco
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        
+        // Crear imagen SVG del contenido
+        const svgData = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000">
+            <foreignObject width="100%" height="100%">
+              <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial, sans-serif; padding: 20px;">
+                ${elemento.innerHTML}
+              </div>
+            </foreignObject>
+          </svg>
+        `
+        
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+        const svgUrl = URL.createObjectURL(svgBlob)
+        
+        const img = new Image()
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0)
+          
+          // Convertir a JPG
+          canvas.toBlob((blob) => {
+            this.descargarImagenJPG(blob)
+            URL.revokeObjectURL(svgUrl)
+          }, 'image/jpeg', 0.9)
+        }
+        
+        img.onerror = () => {
+          console.error('Error cargando imagen SVG')
+          this.mostrarMensaje('Error al procesar la imagen', 'error')
+          URL.revokeObjectURL(svgUrl)
+        }
+        
+        img.src = svgUrl
+        
+      } catch (error) {
+        console.error('Error en método alternativo:', error)
+        this.mostrarMensaje('Error al crear imagen desde DOM', 'error')
+      }
+    },
+
+    // NUEVO: Descargar imagen JPG con nombre personalizado
+    descargarImagenJPG(blob) {
+      try {
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        
+        // Crear nombre de archivo con datos del cliente y fecha
+        const fecha = new Date()
+        const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`
+        const horaStr = `${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}`
+        
+        const nombreCliente = this.datosViaje.nombreCliente 
+          ? this.datosViaje.nombreCliente.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20)
+          : 'Cliente'
+        
+        const nombreArchivo = `Boleta_${nombreCliente}_${fechaStr}_${horaStr}.jpg`
+        
+        link.download = nombreArchivo
+        link.style.display = 'none'
+        
+        // Agregar al DOM, hacer clic y remover
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        // Limpiar URL
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url)
+        }, 1000)
+        
+        this.mostrarMensaje(`Imagen JPG descargada: ${nombreArchivo}`, 'success')
+        
+        console.log('✅ Imagen JPG descargada exitosamente:', nombreArchivo)
+        
+      } catch (error) {
+        console.error('Error descargando imagen JPG:', error)
+        this.mostrarMensaje('Error al descargar la imagen JPG', 'error')
+      }
+    },
+
+    // NUEVO: Procesar imagen base64
+    procesarImagenBase64(base64Data) {
+      try {
+        const byteCharacters = atob(base64Data)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: 'image/jpeg' })
+        
+        this.descargarImagen(blob)
+      } catch (error) {
+        console.error('Error procesando imagen base64:', error)
+        this.mostrarMensaje('Error al procesar la imagen generada', 'error')
+      }
+    },
+
+    // NUEVO: Convertir HTML a imagen usando canvas
+    async convertirHtmlAImagen(htmlContent) {
+      try {
+        // Crear un iframe temporal para renderizar el HTML
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'absolute'
+        iframe.style.left = '-9999px'
+        iframe.style.width = '800px'
+        iframe.style.height = '600px'
+        document.body.appendChild(iframe)
+        
+        // Escribir el HTML en el iframe
+        iframe.contentDocument.write(htmlContent)
+        iframe.contentDocument.close()
+        
+        // Esperar a que se cargue
+        await new Promise(resolve => {
+          iframe.onload = resolve
+          setTimeout(resolve, 1000) // Timeout de seguridad
+        })
+        
+        // Intentar usar html2canvas si está disponible
+        if (window.html2canvas) {
+          const canvas = await html2canvas(iframe.contentDocument.body)
+          canvas.toBlob((blob) => {
+            this.descargarImagen(blob)
+            document.body.removeChild(iframe)
+          }, 'image/jpeg', 0.9)
+        } else {
+          // Si no hay html2canvas, mostrar el HTML en una nueva ventana
+          const newWindow = window.open('', '_blank', 'width=800,height=600')
+          newWindow.document.write(htmlContent)
+          newWindow.document.close()
+          this.mostrarMensaje('Boleta abierta en nueva ventana. Use Ctrl+P para imprimir.', 'info')
+          document.body.removeChild(iframe)
+        }
+        
+      } catch (error) {
+        console.error('Error convirtiendo HTML a imagen:', error)
+        this.mostrarMensaje('Error al convertir la boleta a imagen', 'error')
+      }
+    },
+
+    // NUEVO: Método auxiliar para descargar imagen
+    descargarImagen(blob) {
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      const fecha = new Date()
+      const nombreArchivo = `pasaje-${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}-${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}.jpg`
+      
+      link.download = nombreArchivo
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      this.mostrarMensaje('Imagen generada y descargada exitosamente', 'success')
+    },
+
+    // NUEVO: Preparar datos para la imagen - CORREGIDO PARA PAGO MIXTO
+    prepararDatosParaImagen() {
       const ahora = new Date()
       const fechaActual = this.formatearFecha(ahora)
       const horaActual = this.formatearHora(ahora)
-      
       const primerDetalle = this.detallesPasaje[0]
       
-      return {
-        // Datos del PDF
+      // CORREGIDO: Determinar medio de pago para imagen
+      let medioPagoImagen = 'efectivo'
+      let esPagoMixto = false
+      let detallesPago = ''
+      
+      console.log('💰 Preparando datos de pago:', {
+        pagoMixto: this.datosViaje.pagoMixto,
+        medioPago: this.datosViaje.medioPago,
+        detallesPago: this.datosViaje.detallesPago
+      })
+      
+      if (this.datosViaje.pagoMixto === true) {
+        medioPagoImagen = 'Pago Mixto'
+        esPagoMixto = true
+        detallesPago = this.datosViaje.detallesPago || 'Pago Mixto'
+      } else if (this.datosViaje.medioPago) {
+        medioPagoImagen = this.getPaymentLabel(this.datosViaje.medioPago)
+        detallesPago = this.datosViaje.detallesPago || `${medioPagoImagen}: S/ ${this.totalGeneral.toFixed(2)}`
+      }
+      
+      const datosParaImagen = {
+        // Datos de emisión
         fecha_emision: fechaActual,
         hora_emision: horaActual,
+        numero_boleta: this.generarNumeroBoleta(),
         operador: 'ROCÍO TRAVEL',
         
         // Datos del cliente
@@ -1088,7 +1377,7 @@ export default {
           nombre: this.datosViaje.nombreCliente || 'CLIENTE',
           documento: this.datosViaje.documentoCliente || '',
           contacto: this.datosViaje.contactoCliente || '',
-          nacionalidad: this.datosViaje.nacionalidadCliente || ''
+          nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
         },
         
         // Datos del pasaje
@@ -1103,14 +1392,160 @@ export default {
         puerto_embarque: this.datosViaje.puertoEmbarque,
         hora_embarque: this.datosViaje.horaEmbarque,
         hora_salida: this.datosViaje.horaSalida,
-        medio_pago: this.datosViaje.medioPago,
-        pago_mixto: this.datosViaje.pagoMixto,
-        detalles_pago: this.datosViaje.detallesPago,
-        nota: this.datosViaje.nota,
         
-        // Información adicional
+        // CORREGIDO: Datos de pago
+        medio_pago: medioPagoImagen,
+        pago_mixto: esPagoMixto,
+        detalles_pago: detallesPago,
+        
+        // Datos adicionales
+        nota: this.datosViaje.nota,
         destino: primerDetalle.destino || '',
-        ruta: primerDetalle.ruta || primerDetalle.descripcion
+        ruta: primerDetalle.ruta || primerDetalle.descripcion,
+        
+        // Para la vista blade
+        tipo_documento: 'BOLETA DE VENTA',
+        fecha_viaje: fechaActual
+      }
+      
+      console.log('📋 Datos preparados para imagen:', datosParaImagen)
+      return datosParaImagen
+    },
+
+    // NUEVO: Generar número de boleta
+    generarNumeroBoleta() {
+      const ahora = new Date()
+      const año = ahora.getFullYear().toString().slice(-2)
+      const mes = String(ahora.getMonth() + 1).padStart(2, '0')
+      const dia = String(ahora.getDate()).padStart(2, '0')
+      const hora = String(ahora.getHours()).padStart(2, '0')
+      const minuto = String(ahora.getMinutes()).padStart(2, '0')
+      const random = Math.floor(Math.random() * 999).toString().padStart(3, '0')
+      
+      return `BOL-${año}${mes}${dia}-${hora}${minuto}${random}`
+    },
+
+    // Imprimir Ticket de Venta - CORREGIDO PARA PAGO MIXTO
+    async imprimirTicketVenta() {
+      console.log('🎫 Iniciando generación de ticket de venta...')
+      
+      if (!this.puedeGenerarImagen) {
+        this.mostrarMensaje('Complete todos los campos obligatorios para imprimir el ticket', 'warning')
+        return
+      }
+
+      if (this.detallesPasaje.length === 0) {
+        this.mostrarMensaje('No hay detalles de pasaje para generar el ticket', 'error')
+        return
+      }
+
+      try {
+        this.cargando = true
+        this.mensajeCarga = 'Generando ticket de venta...'
+        
+        const datosCompletos = this.prepararDatosParaTicket()
+        
+        console.log('🎫 Datos preparados para ticket:', JSON.stringify(datosCompletos, null, 2))
+
+        const response = await fetch('/api/pasajes/generar-ticket-venta', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/html',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          body: JSON.stringify(datosCompletos)
+        })
+
+        if (response.ok) {
+          const htmlContent = await response.text()
+          const ticketWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes')
+          
+          if (ticketWindow) {
+            ticketWindow.document.write(htmlContent)
+            ticketWindow.document.close()
+            ticketWindow.focus()
+            this.mostrarMensaje('Ticket de venta generado exitosamente', 'success')
+          } else {
+            throw new Error('No se pudo abrir la ventana del ticket.')
+          }
+        } else {
+          const errorText = await response.text()
+          console.error('Error del servidor:', errorText)
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
+        }
+
+      } catch (error) {
+        console.error('❌ Error generando ticket:', error)
+        this.mostrarMensaje(`Error al generar el ticket: ${error.message}`, 'error')
+      } finally {
+        this.cargando = false
+      }
+    },
+
+    // Preparar datos para el ticket de venta - CORREGIDO
+    prepararDatosParaTicket() {
+      const ahora = new Date()
+      const fechaActual = this.formatearFecha(ahora)
+      const horaActual = this.formatearHoraTicket(ahora)
+      const primerDetalle = this.detallesPasaje[0]
+      
+      if (!primerDetalle) {
+        throw new Error('No hay detalles de pasaje disponibles')
+      }
+      
+      // Determinar medio de pago para el ticket
+      let medioPagoTicket = 'efectivo'
+      let esPagoMixto = false
+      let detallesPago = ''
+      
+      if (this.datosViaje.pagoMixto) {
+        medioPagoTicket = 'mixto'
+        esPagoMixto = true
+        detallesPago = this.datosViaje.detallesPago || ''
+      } else if (this.datosViaje.medioPago) {
+        medioPagoTicket = this.datosViaje.medioPago.toLowerCase()
+        detallesPago = this.datosViaje.detallesPago || `${this.getPaymentLabel(this.datosViaje.medioPago)}: S/ ${this.totalGeneral.toFixed(2)}`
+      }
+      
+      return {
+        numero_ticket: this.generarNumeroTicket(),
+        fecha_emision: fechaActual,
+        hora_emision: horaActual,
+        
+        cliente: {
+          nombre: this.datosViaje.nombreCliente || 'CLIENTE',
+          documento: this.datosViaje.documentoCliente || 'N/A',
+          contacto: this.datosViaje.contactoCliente || 'N/A',
+          nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
+        },
+        
+        nombre_cliente: this.datosViaje.nombreCliente || 'CLIENTE',
+        documento_cliente: this.datosViaje.documentoCliente || 'N/A',
+        contacto_cliente: this.datosViaje.contactoCliente || 'N/A',
+        nacionalidad_cliente: this.datosViaje.nacionalidadCliente || 'PERUANA',
+        
+        cantidad: parseInt(primerDetalle.cantidad) || 1,
+        descripcion: primerDetalle.descripcion || 'Pasaje',
+        precio_unitario: parseFloat(primerDetalle.precio_unitario || 0).toFixed(2),
+        subtotal: parseFloat(primerDetalle.subtotal || 0).toFixed(2),
+        total: this.totalGeneral.toFixed(2),
+        
+        fecha_viaje: fechaActual,
+        embarcacion: this.datosViaje.embarcacion || 'N/A',
+        puerto_embarque: this.datosViaje.puertoEmbarque || 'N/A',
+        hora_embarque: this.datosViaje.horaEmbarque || 'N/A',
+        hora_salida: this.datosViaje.horaSalida || 'N/A',
+        
+        medio_pago: medioPagoTicket,
+        pago_mixto: esPagoMixto,
+        detalles_pago: detallesPago,
+        
+        nota: this.datosViaje.nota || '',
+        destino: primerDetalle.destino || primerDetalle.descripcion || 'N/A',
+        ruta: primerDetalle.ruta || primerDetalle.descripcion || 'N/A',
+        operador: 'ROCÍO TRAVEL'
       }
     },
 
@@ -1132,14 +1567,29 @@ export default {
       return `${String(horas).padStart(2, '0')}:${minutos} ${ampm}`
     },
 
+    generarNumeroTicket() {
+      const ahora = new Date()
+      const año = ahora.getFullYear().toString().slice(-2)
+      const mes = String(ahora.getMonth() + 1).padStart(2, '0')
+      const dia = String(ahora.getDate()).padStart(2, '0')
+      const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+      
+      return `NV-${año}${mes}${dia}${random}`
+    },
+
+    formatearHoraTicket(fecha) {
+      const horas = String(fecha.getHours()).padStart(2, '0')
+      const minutos = String(fecha.getMinutes()).padStart(2, '0')
+      const segundos = String(fecha.getSeconds()).padStart(2, '0')
+      
+      return `${horas}:${minutos}:${segundos}`
+    },
+
     // Cargar datos desde el formulario anterior
     cargarDatosDesdeFormulario() {
       console.log('🔍 Cargando datos desde el formulario anterior...')
       
-      // Método 1: Desde query parameters (navegación con router)
       const queryParams = this.$route.query
-      
-      // Método 2: Desde sessionStorage
       const datosSessionStorage = sessionStorage.getItem('datosPasajeNavegacion')
       let datosParsed = null
       
@@ -1152,13 +1602,11 @@ export default {
         }
       }
       
-      // Usar datos de query params o sessionStorage (prioridad a query params)
       const datosPasaje = Object.keys(queryParams).length > 0 ? queryParams : datosParsed
       
       console.log('📋 Datos del pasaje recibidos:', datosPasaje)
 
       if (datosPasaje && (datosPasaje.cantidad || datosPasaje.descripcion)) {
-        // Crear objeto de detalle con los datos recibidos
         const detalle = {
           cantidad: parseInt(datosPasaje.cantidad) || 1,
           descripcion: datosPasaje.descripcion || datosPasaje.ruta || '',
@@ -1169,19 +1617,20 @@ export default {
         }
 
         console.log('✅ Detalle creado:', detalle)
-
-        // Añadir a la lista de detalles
         this.detallesPasaje = [detalle]
         
         this.mostrarMensaje('Datos cargados desde el formulario anterior', 'success')
-        this.validarPDF() // Validar si ya se puede generar PDF
+        this.validarImagen()
       } else {
         console.log('⚠️ No se encontraron datos del pasaje')
         this.mostrarMensaje('No se encontraron datos del formulario anterior', 'warning')
       }
     },
 
+    // Guardar todo - CORREGIDO PARA PAGO MIXTO
     async guardarTodo() {
+      console.log('💾 Iniciando guardado completo...')
+      
       if (!this.validarFormularioCompleto()) {
         return
       }
@@ -1192,9 +1641,8 @@ export default {
         await this.enviarTodosLosDatos()
         this.mostrarMensaje('Todos los datos guardados correctamente', 'success')
         
-        // Opcional: redireccionar después de 2 segundos
         setTimeout(() => {
-          // this.$router.push('/') // Descomentar si quieres redireccionar
+          // this.$router.push('/') // Opcional
         }, 2000)
       } catch (error) {
         console.error('Error al guardar todo:', error)
@@ -1204,6 +1652,7 @@ export default {
       }
     },
 
+    // Validar formulario completo - CORREGIDO PARA PAGO MIXTO
     validarFormularioCompleto() {
       if (this.detallesPasaje.length === 0) {
         this.mostrarMensaje('No hay detalles de pasaje para guardar', 'warning')
@@ -1219,14 +1668,55 @@ export default {
         this.mostrarMensaje('Debe seleccionar un puerto de embarque', 'warning')
         return false
       }
+
+      if (!this.datosViaje.horaEmbarque) {
+        this.mostrarMensaje('Debe seleccionar una hora de embarque', 'warning')
+        return false
+      }
+
+      if (!this.datosViaje.horaSalida) {
+        this.mostrarMensaje('Debe seleccionar una hora de salida', 'warning')
+        return false
+      }
+
+      // Validar medio de pago
+      if (this.datosViaje.pagoMixto) {
+        if (!this.datosViaje.detallesPago || this.datosViaje.detallesPago.trim() === '') {
+          this.mostrarMensaje('Debe configurar el pago mixto correctamente', 'warning')
+          return false
+        }
+        if (!(this.pagoMixtoDetalle.efectivo > 0 || this.pagoMixtoDetalle.yape > 0 || this.pagoMixtoDetalle.plin > 0)) {
+          this.mostrarMensaje('Debe configurar al menos un método de pago en el pago mixto', 'warning')
+          return false
+        }
+      } else {
+        if (!this.datosViaje.medioPago || this.datosViaje.medioPago.trim() === '') {
+          this.mostrarMensaje('Debe seleccionar un medio de pago', 'warning')
+          return false
+        }
+      }
       
       return true
     },
 
+    // Enviar todos los datos - CORREGIDO PARA PAGO MIXTO
     async enviarTodosLosDatos() {
       const primerDetalle = this.detallesPasaje[0]
       
-      // Combinar todos los datos para el modelo Pasaje
+      // Determinar medio de pago para guardar
+      let medioPagoGuardar = 'efectivo'
+      let esPagoMixtoGuardar = false
+      let detallesPagoGuardar = ''
+      
+      if (this.datosViaje.pagoMixto) {
+        medioPagoGuardar = 'mixto'
+        esPagoMixtoGuardar = true
+        detallesPagoGuardar = this.datosViaje.detallesPago || ''
+      } else if (this.datosViaje.medioPago) {
+        medioPagoGuardar = this.datosViaje.medioPago.toLowerCase()
+        detallesPagoGuardar = this.datosViaje.detallesPago || `${this.getPaymentLabel(this.datosViaje.medioPago)}: S/ ${this.totalGeneral.toFixed(2)}`
+      }
+      
       const datosCompletos = {
         cantidad: primerDetalle.cantidad,
         descripcion: primerDetalle.descripcion,
@@ -1238,9 +1728,9 @@ export default {
         puerto_embarque: this.datosViaje.puertoEmbarque,
         hora_embarque: this.datosViaje.horaEmbarque,
         hora_salida: this.datosViaje.horaSalida,
-        medio_pago: this.datosViaje.medioPago,
-        pago_mixto: this.datosViaje.pagoMixto,
-        detalles_pago: this.datosViaje.detallesPago,
+        medio_pago: medioPagoGuardar,
+        pago_mixto: esPagoMixtoGuardar,
+        detalles_pago: detallesPagoGuardar,
         nota: this.datosViaje.nota,
         nombre_cliente: this.datosViaje.nombreCliente,
         documento_cliente: this.datosViaje.documentoCliente,
@@ -1250,7 +1740,6 @@ export default {
 
       console.log('📤 Enviando datos completos al PasajeController:', datosCompletos)
 
-      // Llamada al PasajeController (no DetallePasajeController)
       const response = await fetch('/api/pasajes', {
         method: 'POST',
         headers: {
@@ -1269,9 +1758,7 @@ export default {
         throw new Error(result.message || 'Error al guardar los datos')
       }
 
-      // Guardar el ID para poder generar PDF
       this.detalleActualId = result.data.id
-      
       return result
     },
 
@@ -1292,14 +1779,12 @@ export default {
         nacionalidadCliente: ''
       }
       this.detalleActualId = null
-      this.puedeGenerarPDF = false
+      this.puedeGenerarImagen = false
       
-      // Limpiar también datos de pago
       this.limpiarPagoMixto()
       this.cantidadCliente = 0
       this.vuelto = 0
       
-      // Limpiar también sessionStorage
       sessionStorage.removeItem('datosPasajeNavegacion')
       sessionStorage.removeItem('datosPasajeActuales')
       sessionStorage.removeItem('datosCliente')
@@ -1309,8 +1794,13 @@ export default {
 
     cancelar() {
       if (confirm('¿Está seguro de cancelar? Se perderán los datos no guardados.')) {
-        this.$router.go(-1) // Volver a la página anterior
+        this.$router.go(-1)
       }
+    },
+
+    // NUEVO: Refrescar listas periódicamente
+    refresharListas() {
+      this.cargarEmbarcacionesYPuertos()
     },
 
     // Métodos de mensajes
@@ -1318,7 +1808,6 @@ export default {
       this.mensaje = texto
       this.tipoMensaje = tipo
       
-      // Auto cerrar después de 5 segundos
       setTimeout(() => {
         this.cerrarMensaje()
       }, 5000)
@@ -1330,12 +1819,26 @@ export default {
   },
 
   watch: {
-    // Observar cambios en los datos del viaje para validar PDF
     datosViaje: {
       handler() {
-        this.validarPDF()
+        this.validarImagen()
       },
       deep: true
+    },
+    
+    // NUEVO: Watch para listas - forzar reactividad
+    embarcaciones: {
+      handler(newVal) {
+        console.log('Embarcaciones actualizadas:', newVal.length)
+      },
+      immediate: true
+    },
+    
+    puertosEmbarque: {
+      handler(newVal) {
+        console.log('Puertos actualizados:', newVal.length)
+      },
+      immediate: true
     }
   }
 }
@@ -1372,8 +1875,8 @@ export default {
   gap: 12px;
 }
 
-/* Botones */
-.btn-pdf {
+/* Botón Imagen (anteriormente PDF) */
+.btn-imagen {
   padding: 12px 20px;
   border: none;
   border-radius: 8px;
@@ -1384,16 +1887,16 @@ export default {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: linear-gradient(135deg, #17a2b8, #138496);
   color: white;
 }
 
-.btn-pdf:hover:not(:disabled) {
+.btn-imagen:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(220,53,69,0.3);
+  box-shadow: 0 5px 15px rgba(23,162,184,0.3);
 }
 
-.btn-pdf:disabled {
+.btn-imagen:disabled {
   background: #6c757d;
   cursor: not-allowed;
   opacity: 0.6;
@@ -2223,7 +2726,7 @@ export default {
     width: 100%;
   }
   
-  .btn-pdf, .btn-ticket, .btn-secondary {
+  .btn-imagen, .btn-ticket, .btn-secondary {
     width: 100%;
     justify-content: center;
   }

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="header">
       <div class="header-top">
-        <h2>Agregar detalles del pasaje</h2>
-        <!-- Botón Agregar/Actualizar -->
+        <h2>Agregar Detalle de Pasaje</h2>
+        <!-- Botón para abrir modal -->
         <button class="modal-button" @click="abrirModal">
           <i class="fas fa-edit"></i>
           Agregar/Actualizar
@@ -30,6 +30,7 @@
         <div class="input-group origen-group">
           <label for="origen">Destino</label>
           <select 
+            v-if="!modoManualOrigen"
             id="origen" 
             v-model="formData.origen" 
             class="location-input"
@@ -41,6 +42,23 @@
             <option value="FRONTERA">Frontera</option>
             <option value="OTROS">Otros</option>
           </select>
+          <input 
+            v-else
+            id="origenManual"
+            type="text" 
+            v-model="formData.origen" 
+            class="location-input manual-input"
+            placeholder="Destino personalizado"
+            readonly
+          />
+          <button 
+            v-if="modoManualOrigen" 
+            @click="volverASelectOrigen" 
+            class="reset-button"
+            title="Volver a opciones predefinidas"
+          >
+            <i class="fas fa-undo"></i>
+          </button>
         </div>
 
         <button class="swap-button" @click="intercambiarRutas">
@@ -50,6 +68,7 @@
         <div class="input-group destino-group">
           <label for="destinoRuta">Ruta</label>
           <select 
+            v-if="!modoManualRuta"
             id="destinoRuta" 
             v-model="formData.destinoRuta" 
             class="location-input"
@@ -64,6 +83,23 @@
             <option value="TROMPETERO">Trompetero</option>
             <option value="INTUTO">Intuto</option>
           </select>
+          <input 
+            v-else
+            id="rutaManual"
+            type="text" 
+            v-model="formData.destinoRuta" 
+            class="location-input manual-input"
+            placeholder="Ruta personalizada"
+            readonly
+          />
+          <button 
+            v-if="modoManualRuta" 
+            @click="volverASelectRuta" 
+            class="reset-button"
+            title="Volver a opciones predefinidas"
+          >
+            <i class="fas fa-undo"></i>
+          </button>
         </div>
       </div>
 
@@ -111,10 +147,16 @@
         <p><strong>Descripción:</strong> {{ formData.descripcion }}</p>
         <p><strong>Precio Unitario:</strong> {{ parseFloat(formData.precioUnitario).toFixed(2) }}</p>
         <p><strong>Subtotal:</strong> {{ precioTotal.toFixed(2) }}</p>
+        <p v-if="formData.embarcacion"><strong>Embarcación:</strong> {{ formData.embarcacion }}</p>
+        <p v-if="formData.puertoEmbarque"><strong>Puerto:</strong> {{ formData.puertoEmbarque }}</p>
+        <p v-if="!formData.embarcacion || !formData.puertoEmbarque" class="optional-info">
+          <i class="fas fa-info-circle"></i>
+          Embarcación y puerto se pueden agregar opcionalmente desde "Agregar/Actualizar"
+        </p>
       </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal MEJORADO -->
     <div v-if="mostrarModal" class="modal-overlay" @click="cerrarModal">
       <div class="modal-container" @click.stop>
         <div class="modal-header">
@@ -162,6 +204,42 @@
               </div>
             </div>
           </div>
+
+          <!-- SECCIÓN OPCIONAL: Embarcación y Puerto -->
+          <div class="modal-section">
+            <h4 class="section-title">
+              <i class="fas fa-ship"></i>
+              Detalles del Viaje (Opcional)
+            </h4>
+            <p class="section-description">
+              <i class="fas fa-info-circle"></i>
+              Estos campos son opcionales. Se pueden completar aquí o después en la vista de detalles.
+            </p>
+            
+            <div class="modal-details-section">
+              <div class="modal-input-group">
+                <label for="modalEmbarcacion">Embarcación</label>
+                <input 
+                  id="modalEmbarcacion"
+                  type="text"
+                  v-model="modalData.embarcacion" 
+                  class="modal-input"
+                  placeholder="Nombre de la embarcación (opcional)"
+                />
+              </div>
+
+              <div class="modal-input-group">
+                <label for="modalPuerto">Puerto de embarque</label>
+                <input 
+                  id="modalPuerto"
+                  type="text"
+                  v-model="modalData.puertoEmbarque" 
+                  class="modal-input"
+                  placeholder="Puerto de embarque (opcional)"
+                />
+              </div>
+            </div>
+          </div>
         </div>
         
         <div class="modal-footer">
@@ -202,6 +280,10 @@ export default {
       mostrarModal: false,
       cargandoAgregar: false,
       
+      // Nuevas variables para modo manual
+      modoManualOrigen: false,
+      modoManualRuta: false,
+      
       formData: {
         origen: '',
         destinoRuta: '',
@@ -214,7 +296,9 @@ export default {
       
       modalData: {
         origen: '',
-        destinoRuta: ''
+        destinoRuta: '',
+        embarcacion: '',
+        puertoEmbarque: ''
       }
     }
   },
@@ -246,11 +330,13 @@ export default {
       }
     },
 
-    // Métodos del Modal
+    // Métodos del Modal MEJORADOS
     abrirModal() {
-      // Cargar solo datos de ruta en el modal
+      // Cargar datos actuales en el modal
       this.modalData.origen = this.formData.origen
       this.modalData.destinoRuta = this.formData.destinoRuta
+      this.modalData.embarcacion = this.formData.embarcacion
+      this.modalData.puertoEmbarque = this.formData.puertoEmbarque
       
       this.mostrarModal = true
     },
@@ -260,7 +346,9 @@ export default {
       // Limpiar datos del modal
       this.modalData = {
         origen: '',
-        destinoRuta: ''
+        destinoRuta: '',
+        embarcacion: '',
+        puertoEmbarque: ''
       }
     },
 
@@ -273,21 +361,67 @@ export default {
     },
 
     guardarCambiosModal() {
-      // Actualizar SOLO los campos de ruta del formulario principal
+      // Validar solo los campos obligatorios de ruta
+      if (!this.modalData.origen || !this.modalData.destinoRuta) {
+        this.mensajeError = 'Por favor complete el detalle y la ruta'
+        setTimeout(() => { this.mensajeError = '' }, 3000)
+        return
+      }
+      
+      // Detectar si son valores personalizados (no están en las opciones predefinidas)
+      const opcionesOrigen = ['PUCALLPA', 'YURIMAGUAS', 'FRONTERA', 'OTROS']
+      const opcionesRuta = ['PUCALLPA', 'REQUENA', 'YURIMAGUAS', 'SAN LORENZO', 'SANTA ROSA', 'TROMPETERO', 'INTUTO']
+      
+      this.modoManualOrigen = !opcionesOrigen.includes(this.modalData.origen.toUpperCase())
+      this.modoManualRuta = !opcionesRuta.includes(this.modalData.destinoRuta.toUpperCase())
+      
+      // Actualizar TODOS los campos del formulario principal
       this.formData.origen = this.modalData.origen
       this.formData.destinoRuta = this.modalData.destinoRuta
+      this.formData.embarcacion = this.modalData.embarcacion || '' // Opcional
+      this.formData.puertoEmbarque = this.modalData.puertoEmbarque || '' // Opcional
       
       // Actualizar descripción automáticamente
       this.actualizarDescripcion()
       
+      // Guardar nuevos valores en sessionStorage para que se mantengan en listas
+      if (this.modalData.embarcacion && this.modalData.embarcacion.trim() !== '') {
+        sessionStorage.setItem('nuevaEmbarcacionAgregada', this.modalData.embarcacion)
+      }
+      
+      if (this.modalData.puertoEmbarque && this.modalData.puertoEmbarque.trim() !== '') {
+        sessionStorage.setItem('nuevoPuertoAgregado', this.modalData.puertoEmbarque)
+      }
+      
       // Mostrar mensaje de éxito
-      this.mensajeExito = 'Ruta actualizada correctamente'
+      let mensaje = 'Datos actualizados correctamente'
+      if (this.modoManualOrigen || this.modoManualRuta) {
+        mensaje += '. Valores personalizados detectados - se muestran como texto'
+      }
+      if (this.modalData.embarcacion || this.modalData.puertoEmbarque) {
+        mensaje += '. Detalles del viaje guardados'
+      }
+      
+      this.mensajeExito = mensaje
       setTimeout(() => {
         this.mensajeExito = ''
       }, 3000)
       
       // Cerrar modal
       this.cerrarModal()
+    },
+
+    // Nuevos métodos para volver a selects
+    volverASelectOrigen() {
+      this.modoManualOrigen = false
+      this.formData.origen = ''
+      this.actualizarDescripcion()
+    },
+
+    volverASelectRuta() {
+      this.modoManualRuta = false
+      this.formData.destinoRuta = ''
+      this.actualizarDescripcion()
     },
 
     intercambiarRutas() {
@@ -313,13 +447,17 @@ export default {
           descripcion: this.formData.descripcion,
           precio_unitario: parseFloat(this.formData.precioUnitario),
           subtotal: this.precioTotal,
+          destino: this.formData.origen || '',
+          ruta: this.formData.descripcion,
           embarcacion: this.formData.embarcacion || '',
-          puertoEmbarque: this.formData.puertoEmbarque || ''
+          puerto_embarque: this.formData.puertoEmbarque || ''
         }
         
         console.log('🚀 Enviando datos en tiempo real:', datosActualizados)
         
+        // Guardar para DetallesPasajeView
         sessionStorage.setItem('datosPasajeActuales', JSON.stringify(datosActualizados))
+        sessionStorage.setItem('datosPasajeNavegacion', JSON.stringify(datosActualizados))
         
         if (this.$root) {
           this.$root.$emit('datos-pasaje-actualizados', datosActualizados)
@@ -327,19 +465,20 @@ export default {
       }
     },
     
+    // VALIDACIÓN SIMPLIFICADA - Solo campos esenciales
     validarFormulario() {
       if (!this.formData.origen) {
-        this.mensajeError = 'Por favor selecciona el origen'
+        this.mensajeError = 'Por favor seleccione un destino'
         return false
       }
       
       if (!this.formData.destinoRuta) {
-        this.mensajeError = 'Por favor selecciona el destino'
+        this.mensajeError = 'Por favor seleccione una ruta'
         return false
       }
       
       if (!this.formData.precioUnitario || parseFloat(this.formData.precioUnitario) <= 0) {
-        this.mensajeError = 'Por favor ingresa un precio válido'
+        this.mensajeError = 'Por favor ingrese un precio válido'
         return false
       }
       
@@ -364,8 +503,8 @@ export default {
           cantidad: parseInt(this.formData.cantidad),
           precio_unitario: parseFloat(this.formData.precioUnitario),
           subtotal: this.precioTotal,
-          embarcacion: this.formData.embarcacion || '',
-          puertoEmbarque: this.formData.puertoEmbarque || '',
+          embarcacion: this.formData.embarcacion || '', // Campo opcional
+          puerto_embarque: this.formData.puertoEmbarque || '', // Campo opcional
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
@@ -406,8 +545,9 @@ export default {
         // 6. Mostrar mensaje de éxito
         this.mensajeExito = '¡Pasaje agregado correctamente! Redirigiendo...'
         
-        // 7. Limpiar formulario
-        this.limpiarFormulario()
+        // 7. Limpiar solo el precio (mantener la configuración del modal)
+        this.formData.precioUnitario = ''
+        this.mensajeError = ''
         
         // 8. Redirigir a la vista de detalles del pasaje después de un breve retraso
         setTimeout(() => {
@@ -453,7 +593,7 @@ export default {
               destino: datos.destino,
               ruta: datos.ruta,
               embarcacion: datos.embarcacion,
-              puertoEmbarque: datos.puertoEmbarque,
+              puerto_embarque: datos.puerto_embarque,
               agregado: 'true' // Flag para indicar que fue recién agregado
             }
           })
@@ -626,6 +766,47 @@ export default {
   background: white;
 }
 
+/* Campos de solo lectura y manuales */
+.manual-input {
+  background: #fff3cd !important;
+  border-color: #ffc107 !important;
+  color: #856404 !important;
+  font-weight: 600;
+}
+
+.manual-input::placeholder {
+  color: #856404;
+  opacity: 0.7;
+}
+
+.reset-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background: #ffc107;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background: #e0a800;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.origen-group, .destino-group {
+  position: relative;
+}
+
 .swap-button {
   width: 50px;
   height: 50px;
@@ -766,7 +947,7 @@ export default {
   transform: none;
 }
 
-/* Estilos del Modal */
+/* Estilos del Modal MEJORADOS */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -785,7 +966,7 @@ export default {
   background: white;
   border-radius: 20px;
   width: 90%;
-  max-width: 600px;
+  max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
@@ -852,7 +1033,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #333;
   font-size: 18px;
   font-weight: 600;
@@ -860,10 +1041,35 @@ export default {
   border-bottom: 2px solid #e9ecef;
 }
 
+.section-description {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #e8f4fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1565c0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-description i {
+  color: #2196f3;
+  font-size: 16px;
+}
+
 .modal-route-section {
   display: flex;
   gap: 15px;
   align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.modal-details-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
   margin-bottom: 20px;
 }
 
@@ -986,6 +1192,24 @@ export default {
   color: #424242;
 }
 
+.optional-info {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #856404;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.optional-info i {
+  color: #ffc107;
+  font-size: 14px;
+}
+
 .error-message, .success-message {
   margin-top: 20px;
   padding: 15px 20px;
@@ -1075,6 +1299,11 @@ export default {
 
   .modal-route-section {
     flex-direction: column;
+    gap: 15px;
+  }
+
+  .modal-details-section {
+    grid-template-columns: 1fr;
     gap: 15px;
   }
 

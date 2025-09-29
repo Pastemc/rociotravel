@@ -2,7 +2,7 @@
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <RouterLink to="/" class="brand-link">
+    <RouterLink to="/datos-cliente" class="brand-link">
       <div class="brand-image-placeholder">
         <i class="fas fa-ship"></i>
       </div>
@@ -27,13 +27,6 @@
       <!-- Sidebar Menu -->
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <!-- Dashboard -->
-          <li class="nav-item">
-            <RouterLink to="/" class="nav-link" :class="{ active: $route.path === '/' }">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>Dashboard</p>
-            </RouterLink>
-          </li>
           
           <!-- ========== CENTRAL TOURS EXPRESS - 4 MÓDULOS ========== -->
           
@@ -94,13 +87,30 @@
           
           <!-- Cerrar Sesión -->
           <li class="nav-item">
-            <a href="#" class="nav-link text-danger" @click="logout">
+            <a href="#" class="nav-link text-danger" @click.prevent="logout">
               <i class="nav-icon fas fa-sign-out-alt"></i>
               <p>Cerrar Sesión</p>
             </a>
           </li>
         </ul>
       </nav>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div v-if="mostrarModalLogout" class="modal-logout" @click="cerrarModal">
+      <div class="modal-logout-content" @click.stop>
+        <div class="modal-logout-header">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Cerrar Sesión</h3>
+        </div>
+        <div class="modal-logout-body">
+          <p>¿Estás seguro de cerrar sesión?</p>
+        </div>
+        <div class="modal-logout-footer">
+          <button @click="cerrarModal" class="btn-cancelar">Cancelar</button>
+          <button @click="confirmarLogout" class="btn-confirmar">Cerrar Sesión</button>
+        </div>
+      </div>
     </div>
   </aside>
 </template>
@@ -120,20 +130,22 @@ export default {
       clientesCount: 0,
       detallesPasajeCount: 0,
       pasajesCount: 0,
-      notasVentaCount: 0
+      notasVentaCount: 0,
+      mostrarModalLogout: false
     }
   },
   mounted() {
     this.loadCounts()
+    // Redirigir a datos-cliente si está en la raíz
+    if (this.$route.path === '/') {
+      this.$router.push('/datos-cliente')
+    }
   },
   methods: {
     async loadCounts() {
       try {
         // ========== DATOS SIMULADOS PARA LOS 4 MÓDULOS ==========
-        this.clientesCount = 89
-        this.detallesPasajeCount = 45
-        this.pasajesCount = 156
-        this.notasVentaCount = 234
+        
         
         // TODO: Reemplazar con llamadas reales a la API
         // const response = await axios.get('/api/dashboard/counts')
@@ -145,9 +157,21 @@ export default {
     },
     
     logout() {
-      if (confirm('¿Está seguro que desea cerrar sesión?')) {
-        this.$emit('logout')
-      }
+      this.mostrarModalLogout = true
+    },
+
+    cerrarModal() {
+      this.mostrarModalLogout = false
+    },
+
+    confirmarLogout() {
+      this.mostrarModalLogout = false
+      this.$emit('logout')
+      // Opcional: Limpiar localStorage/sessionStorage
+      localStorage.clear()
+      sessionStorage.clear()
+      // Redirigir al login
+      this.$router.push('/login')
     },
     
     refreshCounts() {
@@ -341,6 +365,122 @@ export default {
   transition: transform 0.2s ease;
 }
 
+/* Modal de logout */
+.modal-logout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-logout-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-logout-header {
+  padding: 25px;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-logout-header i {
+  font-size: 3rem;
+  color: #dc3545;
+  margin-bottom: 15px;
+}
+
+.modal-logout-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.modal-logout-body {
+  padding: 30px 25px;
+  text-align: center;
+}
+
+.modal-logout-body p {
+  margin: 0;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.modal-logout-footer {
+  padding: 20px 25px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.btn-cancelar,
+.btn-confirmar {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancelar {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.btn-confirmar {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-confirmar:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
 @media (max-width: 767.98px) {
   .brand-text {
     display: none;
@@ -356,6 +496,20 @@ export default {
   
   .nav-link p {
     font-size: 0.85rem;
+  }
+
+  .modal-logout-content {
+    width: 95%;
+    margin: 15px;
+  }
+
+  .modal-logout-footer {
+    flex-direction: column;
+  }
+
+  .btn-cancelar,
+  .btn-confirmar {
+    width: 100%;
   }
 }
 

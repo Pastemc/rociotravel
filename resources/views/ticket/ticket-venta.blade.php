@@ -14,10 +14,10 @@
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
-            line-height: 1.3;
+            line-height: 1.2;
             color: #000;
             background: #f5f5f5;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,26 +27,35 @@
         .ticket-container {
             background: white;
             width: 80mm;
-            padding: 8mm;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            max-width: 80mm;
+            padding: 5mm;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 4px;
             border: 1px solid #ddd;
         }
 
-        /* Botones de acción */
         .action-buttons {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .btn {
-            padding: 8px 16px;
-            margin: 0 5px;
+            padding: 6px 12px;
+            margin: 0 3px;
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
+        }
+
+        .btn-save {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #0056b3;
         }
 
         .btn-print {
@@ -67,28 +76,27 @@
             background: #c82333;
         }
 
-        /* Header del ticket con logo */
         .ticket-header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-bottom: 2px solid #000;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
 
         .logo-section {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
-            margin-bottom: 8px;
+            justify-content: center;
+            margin-bottom: 6px;
         }
 
         .logo {
-            width: 50px;
-            height: 50px;
-            margin-right: 12px;
-            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            margin-right: 8px;
+            border-radius: 4px;
             overflow: hidden;
-            border: 2px solid #333;
+            border: 1px solid #333;
             flex-shrink: 0;
         }
 
@@ -99,7 +107,6 @@
         }
 
         .empresa-info {
-            flex: 1;
             text-align: center;
         }
 
@@ -108,79 +115,63 @@
             font-weight: bold;
             margin-bottom: 2px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .empresa-subtitulo {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .empresa-destinos {
-            font-size: 9px;
-            line-height: 1.2;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-        .empresa-contacto {
-            font-size: 9px;
-            line-height: 1.3;
-            text-align: center;
-        }
-
-        .empresa-contacto div {
-            margin-bottom: 1px;
-        }
-
-        .empresa-ubicacion {
-            font-weight: bold;
             font-size: 10px;
-            margin-top: 3px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            color: #2c5aa0;
         }
 
-        /* Información del ticket */
         .ticket-info {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-bottom: 1px solid #000;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
 
         .cliente-row {
             margin-bottom: 2px;
-            font-size: 10px;
+            font-size: 9px;
             display: flex;
             justify-content: space-between;
+            line-height: 1.3;
         }
 
         .cliente-row strong {
-            min-width: 90px;
+            min-width: 80px;
+            font-weight: bold;
         }
 
-        /* Tabla de productos */
+        .cliente-row span {
+            text-align: right;
+            flex: 1;
+        }
+
         .productos-section {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .productos-header {
             border-top: 2px solid #000;
             border-bottom: 1px solid #000;
-            padding: 4px 2px;
+            padding: 3px 2px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 9px;
             display: grid;
-            grid-template-columns: 25px 1fr 45px 45px;
-            gap: 3px;
+            grid-template-columns: 22px 1fr 40px 40px;
+            gap: 2px;
             text-align: center;
         }
 
         .producto-row {
             padding: 3px 2px;
-            font-size: 10px;
+            font-size: 9px;
             display: grid;
-            grid-template-columns: 25px 1fr 45px 45px;
-            gap: 3px;
+            grid-template-columns: 22px 1fr 40px 40px;
+            gap: 2px;
             border-bottom: 1px solid #ccc;
         }
 
@@ -196,93 +187,98 @@
             text-align: left;
         }
 
-        /* Total */
         .total-section {
             border-top: 2px solid #000;
             border-bottom: 2px solid #000;
-            padding: 6px 0;
-            margin-bottom: 12px;
+            padding: 5px 0;
+            margin-bottom: 8px;
             background: #f9f9f9;
         }
 
         .total-row {
             text-align: right;
             font-weight: bold;
-            font-size: 14px;
-            padding-right: 10px;
+            font-size: 13px;
+            padding-right: 8px;
         }
 
-        /* Información del viaje */
         .viaje-info {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-bottom: 1px solid #000;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
 
         .viaje-row {
-            margin-bottom: 3px;
-            font-size: 10px;
+            margin-bottom: 2px;
+            font-size: 9px;
             display: flex;
             justify-content: space-between;
-        }
-
-        .viaje-row strong {
-            min-width: 100px;
-        }
-
-        .nota-section {
-            margin-top: 5px;
-            font-size: 9px;
-            font-style: italic;
-            background: #f0f0f0;
-            padding: 3px;
-            border-radius: 3px;
-        }
-
-        /* Footer */
-        .ticket-footer {
-            text-align: center;
-            font-size: 8px;
             line-height: 1.3;
         }
 
+        .viaje-row strong {
+            min-width: 85px;
+            font-weight: bold;
+        }
+
+        .viaje-row span {
+            text-align: right;
+            flex: 1;
+        }
+
+        .nota-section {
+            margin-top: 4px;
+            font-size: 8px;
+            font-style: italic;
+            background: #f0f0f0;
+            padding: 3px;
+            border-radius: 2px;
+        }
+
+        .ticket-footer {
+            text-align: center;
+            font-size: 8px;
+            line-height: 1.2;
+        }
+
         .politicas {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-align: justify;
-            padding: 5px;
+            padding: 4px;
             background: #fff3cd;
             border: 1px solid #ffeaa7;
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
         .equipaje-info {
-            text-align: right;
-            margin-bottom: 8px;
+            text-align: center;
+            margin-bottom: 6px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 9px;
             background: #d1ecf1;
             padding: 3px;
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
         .separador {
             text-align: center;
-            margin: 8px 0;
-            font-size: 10px;
+            margin: 6px 0;
+            font-size: 9px;
             font-weight: bold;
         }
 
         .cambio-boleta {
             font-weight: bold;
-            margin-top: 8px;
-            font-size: 9px;
+            margin-top: 6px;
+            font-size: 8px;
             background: #f8d7da;
-            padding: 5px;
-            border-radius: 3px;
+            padding: 4px;
+            border-radius: 2px;
             border: 1px solid #f5c6cb;
+            text-align: center;
+            line-height: 1.3;
         }
 
-        /* Estilos para impresión */
         @media print {
             body {
                 background: white;
@@ -292,6 +288,7 @@
 
             .ticket-container {
                 width: 80mm;
+                max-width: 80mm;
                 margin: 0;
                 padding: 3mm;
                 box-shadow: none;
@@ -317,11 +314,10 @@
             }
         }
 
-        /* Ajustes para papel térmico pequeño */
         @media (max-width: 80mm) {
             .ticket-container {
                 width: 58mm;
-                font-size: 9px;
+                font-size: 8px;
             }
             
             .empresa-nombre {
@@ -329,21 +325,32 @@
             }
             
             .logo {
-                width: 35px;
-                height: 35px;
+                width: 30px;
+                height: 30px;
             }
         }
     </style>
 </head>
 <body>
     <div class="ticket-container">
-        <!-- Botones de acción -->
         <div class="action-buttons">
             <button onclick="window.print()" class="btn btn-print">Imprimir</button>
+            <button onclick="guardarTicket()" class="btn btn-save">Guardar</button>
             <button onclick="window.close()" class="btn btn-close">Cerrar</button>
         </div>
 
-        <!-- Información del ticket -->
+        <div class="ticket-header">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="{{ asset('images/rocio.jpg') }}" alt="Logo ROCÍO TRAVEL">
+                </div>
+                <div class="empresa-info">
+                    <h1 class="empresa-nombre">ROCÍO TRAVEL</h1>
+                    <h2 class="empresa-subtitulo">VENTA DE PASAJES FLUVIALES</h2>
+                </div>
+            </div>
+        </div>
+
         <div class="ticket-info">
             <div class="cliente-row">
                 <strong>CLIENTE:</strong> 
@@ -363,39 +370,36 @@
             </div>
             <div class="cliente-row">
                 <strong>F. EMISION:</strong>
-                <span>{{ $fecha_emision }} {{ $hora_emision }}</span>
+                <span>{{ $fecha_emision }} {{ date('h:i A', strtotime($hora_emision)) }}</span>
             </div>
             <div class="cliente-row">
                 <strong>MEDIO PAGO:</strong>
-                <span>{{ ucfirst($medio_pago) }}</span>
+                <span>{{ strtoupper($medio_pago) }}</span>
             </div>
         </div>
 
-        <!-- Productos/Servicios -->
         <div class="productos-section">
             <div class="productos-header">
-                <div>CANT.</div>
+                <div>CANT</div>
                 <div>DESCRIPCION</div>
-                <div>P. UNIT</div>
+                <div>P.UNIT</div>
                 <div>SUB TOTAL</div>
             </div>
             
             <div class="producto-row">
                 <div class="text-center">{{ $cantidad }}</div>
                 <div class="text-left">{{ strtoupper($descripcion) }}</div>
-                <div class="text-right">{{ $precio_unitario }}</div>
-                <div class="text-right">{{ $subtotal }}</div>
+                <div class="text-right">{{ number_format($precio_unitario, 2) }}</div>
+                <div class="text-right">{{ number_format($subtotal, 2) }}</div>
             </div>
         </div>
 
-        <!-- Total -->
         <div class="total-section">
             <div class="total-row">
-                Total: S/ {{ $total }}
+                Total: S/ {{ number_format($total, 2) }}
             </div>
         </div>
 
-        <!-- Información del viaje -->
         <div class="viaje-info">
             <div class="viaje-row">
                 <strong>F. VIAJE:</strong>
@@ -403,19 +407,19 @@
             </div>
             <div class="viaje-row">
                 <strong>EMBARCACION:</strong>
-                <span>{{ $embarcacion }}</span>
+                <span>{{ strtoupper($embarcacion) }}</span>
             </div>
             <div class="viaje-row">
                 <strong>PUERTO EMBAR:</strong>
-                <span>{{ $puerto_embarque }}</span>
+                <span>{{ strtoupper($puerto_embarque) }}</span>
             </div>
             <div class="viaje-row">
                 <strong>H. EMBARQUE:</strong>
-                <span>{{ $hora_embarque }}</span>
+                <span>{{ date('h:i A', strtotime($hora_embarque)) }}</span>
             </div>
             <div class="viaje-row">
                 <strong>H. SALIDA:</strong>
-                <span>{{ $hora_salida }}</span>
+                <span>{{ date('h:i A', strtotime($hora_salida)) }}</span>
             </div>
             
             @if($nota)
@@ -429,7 +433,6 @@
             ================================
         </div>
 
-        <!-- Footer -->
         <div class="ticket-footer">
             <div class="politicas">
                 La empresa no aceptará devoluciones una vez realizada la venta y separado el cupo; en caso que la embarcación haya partido y Ud. no abordó, perderá su derecho a viajar y el valor de su pasaje.
@@ -440,26 +443,88 @@
             </div>
             
             <div class="separador">
-            ================================
+                ================================
             </div>
             
             <div class="cambio-boleta">
-                ESTE TICKET PUEDE SER CAMBIADO POR BOLETA DE<br>
-                VENTA O FACTURA
+                ESTE TICKET PUEDE SER CAMBIADO POR<br>
+                BOLETA DE VENTA O FACTURA
             </div>
         </div>
     </div>
 
     <script>
-        // Función para cerrar
+        function guardarTicket() {
+            const ticketData = {
+                numero_ticket: '{{ $numero_ticket ?? "" }}',
+                cliente: {
+                    nombre: '{{ $cliente["nombre"] ?? "" }}',
+                    documento: '{{ $cliente["documento"] ?? "" }}',
+                    contacto: '{{ $cliente["contacto"] ?? "" }}',
+                    nacionalidad: '{{ $cliente["nacionalidad"] ?? "" }}'
+                },
+                fecha_emision: '{{ $fecha_emision ?? "" }}',
+                hora_emision: '{{ $hora_emision ?? "" }}',
+                medio_pago: '{{ $medio_pago ?? "" }}',
+                cantidad: '{{ $cantidad ?? "" }}',
+                descripcion: '{{ $descripcion ?? "" }}',
+                precio_unitario: '{{ $precio_unitario ?? "" }}',
+                subtotal: '{{ $subtotal ?? "" }}',
+                total: '{{ $total ?? "" }}',
+                fecha_viaje: '{{ $fecha_viaje ?? "" }}',
+                embarcacion: '{{ $embarcacion ?? "" }}',
+                puerto_embarque: '{{ $puerto_embarque ?? "" }}',
+                hora_embarque: '{{ $hora_embarque ?? "" }}',
+                hora_salida: '{{ $hora_salida ?? "" }}',
+                nota: '{{ $nota ?? "" }}'
+            };
+
+            fetch('/api/guardar-ticket', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(ticketData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Ticket guardado exitosamente en el historial');
+                    
+                    if (window.opener && window.opener.postMessage) {
+                        window.opener.postMessage({
+                            type: 'TICKET_GUARDADO',
+                            data: ticketData
+                        }, '*');
+                    }
+                    
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                } else {
+                    alert('Error al guardar el ticket: ' + (data.message || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
+            });
+        }
+
         function cerrarVentana() {
             window.close();
         }
         
-        // Cerrar con ESC
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 window.close();
+            }
+        });
+
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'ACTUALIZAR_HISTORIAL') {
+                console.log('Historial actualizado');
             }
         });
     </script>

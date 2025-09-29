@@ -7,7 +7,6 @@ use App\Models\Pasaje;
 use App\Models\HistorialVenta; // AGREGAR ESTE IMPORT
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -79,7 +78,7 @@ class PasajeController extends Controller
                 'puerto_embarque' => 'required|string|max:255',
                 'hora_embarque' => 'required|string|max:20',
                 'hora_salida' => 'required|string|max:20',
-                'medio_pago' => 'required|string|in:efectivo,yape,plin',
+                'medio_pago' => 'required|string',
                 'pago_mixto' => 'sometimes|boolean',
                 'detalles_pago' => 'nullable|string|max:255',
                 'nota' => 'nullable|string|max:500',
@@ -239,12 +238,12 @@ class PasajeController extends Controller
     }
 
     /**
-     * Generar PDF en tiempo real (sin guardar en base de datos)
+     * NUEVO: Generar imagen JPG en tiempo real (reemplaza al PDF)
      */
-    public function generarPdfTiempoReal(Request $request)
+    public function generarImagenTiempoReal(Request $request)
     {
         try {
-            // Validar datos requeridos para el PDF
+            // Validar datos requeridos para la imagen
             $validator = Validator::make($request->all(), [
                 'cantidad' => 'required|integer|min:1',
                 'descripcion' => 'required|string',
@@ -255,7 +254,7 @@ class PasajeController extends Controller
                 'puerto_embarque' => 'required|string',
                 'hora_embarque' => 'required|string',
                 'hora_salida' => 'required|string',
-                'medio_pago' => 'required|string|in:efectivo,yape,plin',
+                'medio_pago' => 'required|string',
                 'cliente.nombre' => 'required|string',
                 'cliente.documento' => 'required|string',
                 'fecha_emision' => 'sometimes|string',
@@ -266,17 +265,24 @@ class PasajeController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Datos incompletos para generar PDF',
+                    'message' => 'Datos incompletos para generar imagen',
                     'errors' => $validator->errors()
                 ], 422);
             }
 
-            // Generar número de ticket único con timestamp
-            $timestamp = Carbon::now()->format('ymdHis');
-            $numeroTicket = 'CTE-' . $timestamp . '-' . str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+            Log::info('Iniciando generación de imagen de boleta', [
+                'cliente' => $request->cliente['nombre'] ?? 'N/A',
+                'total' => $request->total ?? 0,
+                'medio_pago' => $request->medio_pago ?? 'N/A',
+                'pago_mixto' => $request->pago_mixto ?? false
+            ]);
 
-            // Preparar datos para la vista del PDF
-            $datosPDF = [
+            // Generar número de boleta único con timestamp
+            $timestamp = Carbon::now()->format('ymdHis');
+            $numeroBoleta = 'BOL-' . $timestamp . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+            // Preparar datos para la vista de la boleta
+            $datosBoleta = [
                 // Información de la empresa
                 'empresa' => 'ROCÍO TRAVEL',
                 'subtitulo' => 'VENTA DE PASAJES FLUVIALES',
@@ -290,14 +296,14 @@ class PasajeController extends Controller
                 'yape' => 'Yape: 989667653',
                 'ubicacion' => 'IQUITOS - MAYNAS - LORETO',
 
-                // Datos del ticket
-                'numero_ticket' => $numeroTicket,
+                // Datos de la boleta
+                'numero_boleta' => $numeroBoleta,
+                'tipo_documento' => 'BOLETA DE VENTA',
                 'fecha_emision' => $request->fecha_emision ?: Carbon::now()->format('d/m/Y'),
                 'hora_emision' => $request->hora_emision ?: Carbon::now()->format('h:i A'),
                 'operador' => $request->operador ?: 'ROCÍO TRAVEL',
-                'medio_pago' => strtoupper($request->medio_pago),
 
-                // Información del cliente (VALIDADA)
+                // Información del cliente
                 'cliente' => [
                     'nombre' => strtoupper($request->cliente['nombre']),
                     'documento' => strtoupper($request->cliente['documento']),
@@ -306,33 +312,25 @@ class PasajeController extends Controller
                 ],
 
                 // Detalles del pasaje
-                'pasaje' => [
-                    'cantidad' => $request->cantidad,
-                    'descripcion' => strtoupper($request->descripcion),
-                    'precio_unitario' => number_format($request->precio_unitario, 2),
-                    'subtotal' => number_format($request->subtotal, 2)
-                ],
-
-                // Total
-                'total' => number_format($request->total, 2),
+                'cantidad' => $request->cantidad,
+                'descripcion' => strtoupper($request->descripcion),
+                'precio_unitario' => $request->precio_unitario,
+                'subtotal' => $request->subtotal,
+                'total' => $request->total,
 
                 // Datos del viaje
-                'viaje' => [
-                    'fecha_viaje' => Carbon::now()->format('d/m/Y'),
-                    'embarcacion' => strtoupper($request->embarcacion),
-                    'puerto_embarque' => strtoupper($request->puerto_embarque),
-                    'hora_embarque' => $request->hora_embarque,
-                    'hora_salida' => $request->hora_salida,
-                    'destino' => strtoupper($request->destino ?? ''),
-                    'ruta' => strtoupper($request->ruta ?? $request->descripcion)
-                ],
+                'fecha_viaje' => Carbon::now()->format('d/m/Y'),
+                'embarcacion' => strtoupper($request->embarcacion),
+                'puerto_embarque' => strtoupper($request->puerto_embarque),
+                'hora_embarque' => $request->hora_embarque,
+                'hora_salida' => $request->hora_salida,
+                'destino' => strtoupper($request->destino ?? ''),
+                'ruta' => strtoupper($request->ruta ?? $request->descripcion),
 
-                // Información de pago
-                'pago' => [
-                    'medio_pago' => strtoupper($request->medio_pago),
-                    'pago_mixto' => $request->pago_mixto ?? false,
-                    'detalles_pago' => $request->detalles_pago ?? ''
-                ],
+                // Información de pago CORREGIDA
+                'medio_pago' => $request->pago_mixto ? 'PAGO MIXTO' : strtoupper($request->medio_pago),
+                'pago_mixto' => $request->pago_mixto ?? false,
+                'detalles_pago' => $request->detalles_pago ?? '',
 
                 // Nota adicional
                 'nota' => $request->nota ?: '',
@@ -344,35 +342,47 @@ class PasajeController extends Controller
                     'perderá su derecho a viajar y el valor de su pasaje.'
                 ],
                 'equipaje' => '15Kg por pasajero',
-                'cambio_boleta' => 'ESTE TICKET PUEDE SER CAMBIADO POR BOLETA DE VENTA O FACTURA'
+                'cambio_boleta' => 'ESTE TICKET PUEDE SER CAMBIADO POR BOLETA DE VENTA O FACTURA',
+                'fecha_impresion' => Carbon::now()->format('d/m/Y H:i:s')
             ];
 
-            // Generar PDF usando la vista
-            $pdf = Pdf::loadView('pdf.pasaje-ticket', $datosPDF);
-            
-            // Configurar el PDF
-            $pdf->setPaper('A4', 'portrait');
-            $pdf->setOptions([
-                'defaultFont' => 'Arial',
-                'isRemoteEnabled' => true,
-                'isHtml5ParserEnabled' => true,
-                'debugKeepTemp' => false,
-                'debugPng' => false,
-                'debugCss' => false,
-                'logOutputFile' => storage_path('logs/dompdf.log')
+            Log::info('Datos preparados para la vista blade', [
+                'numero_boleta' => $numeroBoleta,
+                'cliente' => $datosBoleta['cliente']['nombre'],
+                'pago_mixto' => $datosBoleta['pago_mixto'],
+                'medio_pago' => $datosBoleta['medio_pago']
             ]);
 
-            Log::info('PDF generado exitosamente', ['ticket' => $numeroTicket]);
+            // Renderizar la vista blade
+            $html = view('images.pasaje-ticket', $datosBoleta)->render();
+            
+            Log::info('Vista blade renderizada exitosamente', [
+                'longitud_html' => strlen($html),
+                'numero_boleta' => $numeroBoleta
+            ]);
 
-            // Retornar PDF como descarga
-            return $pdf->download("pasaje-{$numeroTicket}.pdf");
+            // OPCIÓN 1: Devolver HTML para que el frontend lo convierta a imagen
+            return response($html, 200)
+                ->header('Content-Type', 'text/html; charset=utf-8')
+                ->header('X-Generated-Type', 'html-boleta')
+                ->header('X-Boleta-Number', $numeroBoleta);
+
+            // OPCIÓN 2: Si tuvieras una librería para convertir HTML a imagen directamente
+            // $this->convertirHtmlAImagen($html, $numeroBoleta);
 
         } catch (\Exception $e) {
-            Log::error('Error en PasajeController@generarPdfTiempoReal: ' . $e->getMessage());
+            Log::error('Error en PasajeController@generarImagenTiempoReal: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error al generar PDF: ' . $e->getMessage()
+                'message' => 'Error al generar imagen de boleta: ' . $e->getMessage(),
+                'debug_info' => [
+                    'error_line' => $e->getLine(),
+                    'error_file' => $e->getFile()
+                ]
             ], 500);
         }
     }
@@ -401,7 +411,7 @@ class PasajeController extends Controller
                 'puerto_embarque' => 'required|string',
                 'hora_embarque' => 'required|string',
                 'hora_salida' => 'required|string',
-                'medio_pago' => 'required|string|in:efectivo,yape,plin'
+                'medio_pago' => 'required|string'
             ]);
 
             if ($validator->fails()) {
@@ -532,7 +542,7 @@ class PasajeController extends Controller
                 'puerto_embarque' => 'sometimes|string|max:255',
                 'hora_embarque' => 'sometimes|string|max:20',
                 'hora_salida' => 'sometimes|string|max:20',
-                'medio_pago' => 'sometimes|string|in:efectivo,yape,plin',
+                'medio_pago' => 'required|string',
                 'pago_mixto' => 'sometimes|boolean',
                 'detalles_pago' => 'sometimes|nullable|string|max:255',
                 'nota' => 'sometimes|nullable|string|max:500',

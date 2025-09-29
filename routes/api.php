@@ -11,7 +11,10 @@ use App\Http\Controllers\Api\TipoDocumentoController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\DetallePasajeController;
 use App\Http\Controllers\Api\PasajeController;
-use App\Http\Controllers\Api\HistorialVentaController; // CORREGIDO - YA ESTABA BIEN
+use App\Http\Controllers\Api\HistorialVentaController;
+// NUEVOS CONTROLADORES AGREGADOS
+use App\Http\Controllers\Api\EmbarcacionController;
+use App\Http\Controllers\Api\PuertoEmbarqueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +39,30 @@ Route::apiResource('areas', AreaController::class);
 Route::apiResource('tramites', TramiteController::class);
 Route::apiResource('personas', PersonaController::class);
 Route::apiResource('tipos-documento', TipoDocumentoController::class);
+
+// ========== NUEVAS RUTAS AGREGADAS ==========
+
+// RUTAS EMBARCACIONES - PARA AUTO-LLENADO
+Route::prefix('embarcaciones')->group(function () {
+    Route::get('/', [EmbarcacionController::class, 'index']);
+    Route::post('/', [EmbarcacionController::class, 'store']);
+    Route::get('/{id}', [EmbarcacionController::class, 'show']);
+    Route::put('/{id}', [EmbarcacionController::class, 'update']);
+    Route::delete('/{id}', [EmbarcacionController::class, 'destroy']);
+    Route::get('/buscar/{nombre}', [EmbarcacionController::class, 'buscarPorNombre']);
+});
+
+// RUTAS PUERTOS DE EMBARQUE - PARA AUTO-LLENADO
+Route::prefix('puertos-embarque')->group(function () {
+    Route::get('/', [PuertoEmbarqueController::class, 'index']);
+    Route::post('/', [PuertoEmbarqueController::class, 'store']);
+    Route::get('/{id}', [PuertoEmbarqueController::class, 'show']);
+    Route::put('/{id}', [PuertoEmbarqueController::class, 'update']);
+    Route::delete('/{id}', [PuertoEmbarqueController::class, 'destroy']);
+    Route::get('/buscar/{nombre}', [PuertoEmbarqueController::class, 'buscarPorNombre']);
+});
+
+// ========== FIN NUEVAS RUTAS ==========
 
 // RUTAS CLIENTES - MEJORADAS PARA AUTO-LLENADO
 Route::prefix('clientes')->group(function () {
@@ -65,7 +92,7 @@ Route::prefix('detalle-pasajes')->group(function () {
     Route::delete('/{id}', [DetallePasajeController::class, 'destroy']);
 });
 
-// RUTAS PASAJES
+// RUTAS PASAJES - ACTUALIZADA CON GENERACIÓN DE IMAGEN
 Route::prefix('pasajes')->group(function () {
     Route::get('/', [PasajeController::class, 'index']);
     Route::post('/', [PasajeController::class, 'store']);
@@ -77,11 +104,13 @@ Route::prefix('pasajes')->group(function () {
     Route::get('/buscar', [PasajeController::class, 'buscar']);
     Route::get('/estadisticas', [PasajeController::class, 'estadisticas']);
     Route::get('/codigo/{codigo}', [PasajeController::class, 'getByCode']);
-    Route::get('/{id}/pdf', [PasajeController::class, 'generatePDF']);
     
-    // Rutas para PDF y Ticket en tiempo real
+    // Rutas para Ticket y PDF (mantenidas para compatibilidad)
     Route::post('/generar-pdf-tiempo-real', [PasajeController::class, 'generarPdfTiempoReal']);
     Route::post('/generar-ticket-venta', [PasajeController::class, 'generarTicketVenta']);
+    
+    // NUEVA RUTA PARA GENERAR IMAGEN JPG
+    Route::post('/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
 });
 
 // ========== RUTAS HISTORIAL DE VENTAS - SISTEMA PRINCIPAL ==========
@@ -121,6 +150,9 @@ Route::prefix('historial-ventas')->group(function () {
     });
 });
 
+// ========== NUEVA RUTA PARA GUARDAR TICKET DESDE EL NAVEGADOR ==========
+Route::post('/guardar-ticket', [HistorialVentaController::class, 'guardarTicketDesdeNavegador']);
+
 // ========== RUTAS DE TESTING ==========
 
 // TEST BÁSICO
@@ -156,6 +188,68 @@ Route::get('/test-auto-llenado/{documento?}', function ($documento = '12345678')
         return response()->json([
             'success' => false,
             'message' => 'Error en test de auto-llenado: ' . $e->getMessage(),
+            'timestamp' => now()
+        ], 500);
+    }
+});
+
+// NUEVO TEST EMBARCACIONES
+Route::get('/test-embarcaciones', function () {
+    try {
+        // Crear embarcaciones de prueba si no existen
+        $embarcaciones = ['KAORY', 'DON JULIO', 'ORIENTE 1', 'HAYDEE', 'MACHI MACHIN'];
+        
+        foreach ($embarcaciones as $nombre) {
+            \App\Models\Embarcacion::firstOrCreate(['nombre' => $nombre]);
+        }
+        
+        $count = \App\Models\Embarcacion::count();
+        $todas = \App\Models\Embarcacion::all();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'API Embarcaciones funcionando correctamente',
+            'total_embarcaciones' => $count,
+            'embarcaciones' => $todas->pluck('nombre'),
+            'endpoint' => '/api/embarcaciones',
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'hint' => 'Necesitas crear el modelo Embarcacion y su migración',
+            'timestamp' => now()
+        ], 500);
+    }
+});
+
+// NUEVO TEST PUERTOS DE EMBARQUE
+Route::get('/test-puertos', function () {
+    try {
+        // Crear puertos de prueba si no existen
+        $puertos = ['CALLE PEVAS #456', 'CALLE PEVAS #408', 'PUERTO PRINCIPAL DE NAUTA', 'PUERTO LA BOCA'];
+        
+        foreach ($puertos as $nombre) {
+            \App\Models\PuertoEmbarque::firstOrCreate(['nombre' => $nombre]);
+        }
+        
+        $count = \App\Models\PuertoEmbarque::count();
+        $todos = \App\Models\PuertoEmbarque::all();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'API Puertos de Embarque funcionando correctamente',
+            'total_puertos' => $count,
+            'puertos' => $todos->pluck('nombre'),
+            'endpoint' => '/api/puertos-embarque',
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'hint' => 'Necesitas crear el modelo PuertoEmbarque y su migración',
             'timestamp' => now()
         ], 500);
     }
@@ -274,7 +368,8 @@ Route::get('/test-historial-ventas', function () {
                 'POST /api/historial-ventas' => 'Crear nueva venta',
                 'GET /api/historial-ventas/buscar' => 'Buscar ventas con filtros',
                 'PUT /api/historial-ventas/{id}/anular' => 'Anular venta',
-                'POST /api/historial-ventas/{id}/generar-ticket' => 'Generar ticket'
+                'POST /api/historial-ventas/{id}/generar-ticket' => 'Generar ticket',
+                'POST /api/guardar-ticket' => 'Guardar ticket desde navegador'
             ],
             'timestamp' => now()
         ]);
@@ -288,14 +383,16 @@ Route::get('/test-historial-ventas', function () {
     }
 });
 
-// HEALTH CHECK COMPLETO
+// HEALTH CHECK COMPLETO ACTUALIZADO
 Route::get('/health', function () {
     try {
         $tablas = [
             'clientes' => \Schema::hasTable('clientes'),
             'detalles_pasaje' => \Schema::hasTable('detalles_pasaje'),
             'pasajes' => \Schema::hasTable('pasajes'),
-            'historial_ventas' => \Schema::hasTable('historial_ventas')
+            'historial_ventas' => \Schema::hasTable('historial_ventas'),
+            'embarcaciones' => \Schema::hasTable('embarcaciones'),
+            'puertos_embarque' => \Schema::hasTable('puertos_embarque')
         ];
         
         return response()->json([
@@ -306,22 +403,35 @@ Route::get('/health', function () {
                 'Cliente' => class_exists('\App\Models\Cliente'),
                 'DetallePasaje' => class_exists('\App\Models\DetallePasaje'),
                 'Pasaje' => class_exists('\App\Models\Pasaje'),
-                'HistorialVenta' => class_exists('\App\Models\HistorialVenta')
+                'HistorialVenta' => class_exists('\App\Models\HistorialVenta'),
+                'Embarcacion' => class_exists('\App\Models\Embarcacion'),
+                'PuertoEmbarque' => class_exists('\App\Models\PuertoEmbarque')
             ],
             'controllers_status' => [
                 'ClienteController' => class_exists('\App\Http\Controllers\Api\ClienteController'),
                 'PasajeController' => class_exists('\App\Http\Controllers\Api\PasajeController'),
-                'HistorialVentaController' => class_exists('\App\Http\Controllers\Api\HistorialVentaController')
+                'HistorialVentaController' => class_exists('\App\Http\Controllers\Api\HistorialVentaController'),
+                'EmbarcacionController' => class_exists('\App\Http\Controllers\Api\EmbarcacionController'),
+                'PuertoEmbarqueController' => class_exists('\App\Http\Controllers\Api\PuertoEmbarqueController')
             ],
             'endpoints_principales' => [
                 'GET /api/clientes' => 'Gestión de clientes',
                 'GET /api/clientes/buscar-por-documento/{documento}' => 'Auto-llenado de cliente',
+                'GET /api/embarcaciones' => 'Gestión de embarcaciones',
+                'GET /api/puertos-embarque' => 'Gestión de puertos de embarque',
                 'GET /api/detalle-pasajes' => 'Detalles de pasajes',
                 'GET /api/pasajes' => 'Gestión de pasajes',
+                'POST /api/pasajes/generar-imagen-tiempo-real' => 'Generar imagen JPG',
                 'GET /api/historial-ventas' => 'Historial de ventas',
                 'GET /api/historial-ventas/buscar' => 'Búsqueda de ventas',
                 'POST /api/historial-ventas' => 'Crear nueva venta',
-                'PUT /api/historial-ventas/{id}/anular' => 'Anular venta'
+                'PUT /api/historial-ventas/{id}/anular' => 'Anular venta',
+                'POST /api/guardar-ticket' => 'Guardar ticket desde navegador'
+            ],
+            'nuevas_funcionalidades' => [
+                'Embarcaciones auto-llenado' => 'GET /api/embarcaciones',
+                'Puertos auto-llenado' => 'GET /api/puertos-embarque',
+                'Generar imagen JPG' => 'POST /api/pasajes/generar-imagen-tiempo-real'
             ],
             'timestamp' => now()
         ]);
