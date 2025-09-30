@@ -37,10 +37,10 @@
             @change="actualizarDescripcion"
           >
             <option value="">Seleccionar origen</option>
-            <option value="PUCALLPA">Pucallpa</option>
-            <option value="YURIMAGUAS">Yurimaguas</option>
-            <option value="FRONTERA">Frontera</option>
-            <option value="OTROS">Otros</option>
+            <option value="PUCALLPA">PUCALLPA</option>
+            <option value="YURIMAGUAS">YURIMAGUAS</option>
+            <option value="FRONTERA">FRONTERA</option>
+            <option value="OTROS">OTROS</option>
           </select>
           <input 
             v-else
@@ -75,13 +75,8 @@
             @change="actualizarDescripcion"
           >
             <option value="">Seleccionar destino</option>
-            <option value="PUCALLPA">Pucallpa</option>
-            <option value="REQUENA">Requena</option>
-            <option value="YURIMAGUAS">Yurimaguas</option>
-            <option value="SAN LORENZO">San Lorenzo</option>
-            <option value="SANTA ROSA">Santa Rosa</option>
-            <option value="TROMPETERO">Trompetero</option>
-            <option value="INTUTO">Intuto</option>
+            <option value="NAUTA-ALFONSO UGARTE">NAUTA-ALFONSO UGARTE</option>
+            
           </select>
           <input 
             v-else

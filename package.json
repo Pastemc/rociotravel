@@ -19,6 +19,7 @@
         "@fortawesome/fontawesome-free": "^7.0.1",
         "admin-lte": "^3.2.0",
         "bootstrap": "^4.6.2",
+        "html2canvas": "^1.4.1",
         "jquery": "^3.7.1",
         "pdf-lib": "^1.17.1",
         "vue": "^3.5.20",
