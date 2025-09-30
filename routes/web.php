@@ -131,7 +131,7 @@ Route::prefix('api')->group(function () {
     Route::post('pasajes/generar-pdf-tiempo-real', [PasajeController::class, 'generarPdfTiempoReal']);
     Route::post('pasajes/generar-ticket-venta', [PasajeController::class, 'generarTicketVenta']);
     // NUEVA RUTA PARA GENERAR IMAGEN JPG
-    Route::post('pasajes/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
+     Route::post('/pasajes/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
     
     // ========== NUEVA RUTA PARA GUARDAR TICKET ==========
     Route::post('pasajes/guardar-ticket', [PasajeController::class, 'guardarTicket']);

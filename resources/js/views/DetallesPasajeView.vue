@@ -4,7 +4,7 @@
     <div class="header-section">
       <h2>Detalles del pasaje</h2>
       <div class="header-actions">
-        <button @click="generarImagenTiempoReal" class="btn-imagen" :disabled="!puedeGenerarImagen">
+        <button @click="generarImagenBoleta" class="btn-imagen" :disabled="!puedeGenerarImagen">
           <i class="fas fa-image"></i>
           Generar Imagen
         </button>
@@ -955,8 +955,8 @@ export default {
       })
     },
 
-    async generarImagenTiempoReal() {
-      console.log('🖼️ Iniciando generación de imagen tiempo real...')
+    async generarImagenBoleta() {
+      console.log('🖼️ Iniciando generación de imagen de boleta...')
       
       if (!this.puedeGenerarImagen) {
         this.mostrarMensaje('Complete todos los campos obligatorios: embarcación, puerto, horas y medio de pago', 'warning')
@@ -971,81 +971,42 @@ export default {
         
         console.log('📤 Enviando datos para imagen:', datosCompletos)
 
-        const rutasParaProbar = [
-          '/imagen-boleta',
-          '/api/pasajes/generar-imagen-tiempo-real',
-          '/generar-imagen-pasaje'
-        ]
+        // Usar la ruta CORRECTA que ya existe en tu PasajeController
+        const response = await fetch('/api/pasajes/generar-imagen-tiempo-real', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/html,application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          body: JSON.stringify(datosCompletos)
+        })
 
-        let response = null
-        let rutaUsada = null
-
-        for (const ruta of rutasParaProbar) {
-          try {
-            console.log(`🔄 Intentando ruta: ${ruta}`)
-            
-            response = await fetch(ruta, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'text/html,application/json,image/*',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-              },
-              body: JSON.stringify(datosCompletos)
-            })
-
-            if (response.ok) {
-              rutaUsada = ruta
-              break
-            } else if (response.status === 405) {
-              console.log(`❌ Ruta ${ruta} no permite POST, probando siguiente...`)
-              continue
-            } else {
-              console.log(`⚠️ Ruta ${ruta} respondió con status ${response.status}`)
-              continue
-            }
-          } catch (error) {
-            console.log(`❌ Error en ruta ${ruta}:`, error.message)
-            continue
+        if (!response.ok) {
+          if (response.status === 405) {
+            throw new Error('Método no permitido. Verifique que la ruta esté configurada en routes/api.php')
           }
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
         }
 
-        if (!response || !response.ok) {
-          throw new Error('Ninguna ruta de generación de imagen está disponible. Verifica la configuración del servidor.')
-        }
+        const contentType = response.headers.get('content-type') || ''
+        console.log('📄 Content-Type recibido:', contentType)
 
-        console.log(`✅ Respuesta recibida desde ruta: ${rutaUsada}`)
-
-        const contentType = response.headers.get('content-type')
-        console.log('📄 Content-Type:', contentType)
-        
-        if (contentType && contentType.includes('application/json')) {
+        // Tu controlador retorna HTML, así que procesamos como HTML
+        if (contentType.includes('text/html')) {
+          console.log('✅ HTML recibido, procesando...')
+          const htmlContent = await response.text()
+          this.procesarHTMLBoleta(htmlContent)
+        } else if (contentType.includes('application/json')) {
           const result = await response.json()
-          
           if (result.success && result.imagen_base64) {
-            console.log('✅ Imagen base64 recibida, procesando...')
             this.descargarImagenDesdeBase64(result.imagen_base64)
           } else {
-            throw new Error(result.message || 'Error al generar la imagen')
-          }
-        } else if (contentType && (contentType.includes('image/jpeg') || contentType.includes('image/png'))) {
-          console.log('✅ Imagen directa recibida, descargando...')
-          const blob = await response.blob()
-          this.descargarImagenJPG(blob)
-        } else if (contentType && contentType.includes('text/html')) {
-          console.log('📄 HTML recibido, abriendo en nueva ventana...')
-          const htmlContent = await response.text()
-          const newWindow = window.open('', '_blank', 'width=800,height=1000')
-          if (newWindow) {
-            newWindow.document.write(htmlContent)
-            newWindow.document.close()
-            this.mostrarMensaje('Boleta generada. Use clic derecho > Guardar imagen como... para descargar', 'success')
-          } else {
-            throw new Error('No se pudo abrir la ventana. Verifique el bloqueador de ventanas emergentes.')
+            throw new Error(result.message || 'Error en la respuesta del servidor')
           }
         } else {
-          throw new Error('Tipo de respuesta no reconocido: ' + contentType)
+          throw new Error('Tipo de respuesta no esperado: ' + contentType)
         }
 
       } catch (error) {
@@ -1053,6 +1014,30 @@ export default {
         this.mostrarMensaje(`Error al generar la imagen: ${error.message}`, 'error')
       } finally {
         this.cargando = false
+      }
+    },
+
+    procesarHTMLBoleta(htmlContent) {
+      try {
+        console.log('📄 Procesando HTML de la boleta...')
+        
+        // Abrir el HTML en una nueva ventana para que el usuario pueda imprimir o guardar
+        const newWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
+        
+        if (newWindow) {
+          newWindow.document.write(htmlContent)
+          newWindow.document.close()
+          newWindow.focus()
+          
+          this.mostrarMensaje('Boleta generada correctamente. Use Ctrl+P para imprimir o clic derecho > Guardar como...', 'success')
+          
+          console.log('✅ Boleta abierta en nueva ventana')
+        } else {
+          throw new Error('No se pudo abrir ventana. Verifique el bloqueador de ventanas emergentes.')
+        }
+      } catch (error) {
+        console.error('❌ Error procesando HTML:', error)
+        this.mostrarMensaje('Error al mostrar la boleta: ' + error.message, 'error')
       }
     },
 
@@ -1124,31 +1109,12 @@ export default {
       const horaActual = this.formatearHora(ahora)
       const primerDetalle = this.detallesPasaje[0]
       
-      let medioPagoImagen = 'efectivo'
-      let esPagoMixto = false
-      let detallesPago = ''
-      
-      console.log('💰 Preparando datos de pago:', {
-        pagoMixto: this.datosViaje.pagoMixto,
-        medioPago: this.datosViaje.medioPago,
-        detallesPago: this.datosViaje.detallesPago
-      })
-      
-      if (this.datosViaje.pagoMixto === true) {
-        medioPagoImagen = 'Pago Mixto'
-        esPagoMixto = true
-        detallesPago = this.datosViaje.detallesPago || 'Pago Mixto'
-      } else if (this.datosViaje.medioPago) {
-        medioPagoImagen = this.getPaymentLabel(this.datosViaje.medioPago)
-        detallesPago = this.datosViaje.detallesPago || `${medioPagoImagen}: S/ ${this.totalGeneral.toFixed(2)}`
+      if (!primerDetalle) {
+        throw new Error('No hay detalles de pasaje disponibles')
       }
       
       const datosParaImagen = {
-        fecha_emision: fechaActual,
-        hora_emision: horaActual,
-        numero_boleta: this.generarNumeroBoleta(),
-        operador: 'ROCÍO TRAVEL',
-        
+        // Información del cliente (estructura que espera tu controlador)
         cliente: {
           nombre: this.datosViaje.nombreCliente || 'CLIENTE',
           documento: this.datosViaje.documentoCliente || '',
@@ -1156,27 +1122,33 @@ export default {
           nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
         },
         
-        cantidad: primerDetalle.cantidad,
-        descripcion: primerDetalle.descripcion,
-        precio_unitario: primerDetalle.precio_unitario,
-        subtotal: primerDetalle.subtotal,
-        total: this.totalGeneral,
+        // Detalles del pasaje
+        cantidad: primerDetalle.cantidad || 1,
+        descripcion: primerDetalle.descripcion || 'Pasaje',
+        precio_unitario: parseFloat(primerDetalle.precio_unitario || 0),
+        subtotal: parseFloat(primerDetalle.subtotal || 0),
+        total: parseFloat(this.totalGeneral),
         
-        embarcacion: this.datosViaje.embarcacion,
-        puerto_embarque: this.datosViaje.puertoEmbarque,
-        hora_embarque: this.datosViaje.horaEmbarque,
-        hora_salida: this.datosViaje.horaSalida,
+        // Datos del viaje
+        embarcacion: this.datosViaje.embarcacion || '',
+        puerto_embarque: this.datosViaje.puertoEmbarque || '',
+        hora_embarque: this.datosViaje.horaEmbarque || '',
+        hora_salida: this.datosViaje.horaSalida || '',
         
-        medio_pago: medioPagoImagen,
-        pago_mixto: esPagoMixto,
-        detalles_pago: detallesPago,
+        // Información de pago
+        medio_pago: this.datosViaje.medioPago || 'efectivo',
+        pago_mixto: this.datosViaje.pagoMixto || false,
+        detalles_pago: this.datosViaje.detallesPago || '',
         
-        nota: this.datosViaje.nota,
+        // Información adicional
+        nota: this.datosViaje.nota || '',
         destino: primerDetalle.destino || '',
-        ruta: primerDetalle.ruta || primerDetalle.descripcion,
+        ruta: primerDetalle.ruta || primerDetalle.descripcion || '',
         
-        tipo_documento: 'BOLETA DE VENTA',
-        fecha_viaje: fechaActual
+        // Campos para compatibilidad con el controlador
+        fecha_emision: fechaActual,
+        hora_emision: horaActual,
+        operador: 'ROCÍO TRAVEL'
       }
       
       console.log('📋 Datos preparados para imagen:', datosParaImagen)

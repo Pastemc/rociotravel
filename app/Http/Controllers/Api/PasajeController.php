@@ -387,6 +387,94 @@ class PasajeController extends Controller
         }
     }
 
+    // En tu PasajeController.php - método generarImagenTiempoReal
+
+/**
+ * NUEVO: Generar imagen JPG descargable
+ */
+public function generarImagenBoleta(Request $request)
+{
+    try {
+        // Validar datos requeridos para la imagen
+        $validator = Validator::make($request->all(), [
+            'cantidad' => 'required|integer|min:1',
+            'descripcion' => 'required|string',
+            'precio_unitario' => 'required|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
+            'total' => 'required|numeric|min:0',
+            'embarcacion' => 'required|string',
+            'puerto_embarque' => 'required|string',
+            'hora_embarque' => 'required|string',
+            'hora_salida' => 'required|string',
+            'medio_pago' => 'required|string',
+            'cliente.nombre' => 'required|string',
+            'cliente.documento' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos incompletos para generar imagen',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Generar número de boleta único
+        $timestamp = Carbon::now()->format('ymdHis');
+        $numeroBoleta = 'BOL-' . $timestamp . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+        // Preparar datos para la vista
+        $datosBoleta = [
+            'empresa' => 'ROCÍO TRAVEL',
+            'subtitulo' => 'VENTA DE PASAJES FLUVIALES',
+            'direccion_fisica' => 'Dirección: Calle. Pevas N° 366',
+            'correo' => 'Correo: travelrocio19@gmail.com',
+            'contacto' => 'Contacto: +51901978379',
+            
+            'numero_boleta' => $numeroBoleta,
+            'fecha_emision' => $request->fecha_emision ?: Carbon::now()->format('d/m/Y'),
+            'hora_emision' => $request->hora_emision ?: Carbon::now()->format('h:i A'),
+
+            'cliente' => [
+                'nombre' => strtoupper($request->cliente['nombre']),
+                'documento' => strtoupper($request->cliente['documento']),
+                'contacto' => $request->cliente['contacto'] ?? '',
+                'nacionalidad' => strtoupper($request->cliente['nacionalidad'] ?? 'PERUANA')
+            ],
+
+            'cantidad' => $request->cantidad,
+            'descripcion' => strtoupper($request->descripcion),
+            'precio_unitario' => number_format($request->precio_unitario, 2),
+            'subtotal' => number_format($request->subtotal, 2),
+            'total' => number_format($request->total, 2),
+
+            'embarcacion' => strtoupper($request->embarcacion),
+            'puerto_embarque' => strtoupper($request->puerto_embarque),
+            'hora_embarque' => $request->hora_embarque,
+            'hora_salida' => $request->hora_salida,
+
+            'medio_pago' => $request->pago_mixto ? 'PAGO MIXTO' : strtoupper($request->medio_pago),
+            'detalles_pago' => $request->detalles_pago ?? '',
+
+            'nota' => $request->nota ?: '',
+            'fecha_generacion' => Carbon::now()->format('d/m/Y H:i:s')
+        ];
+
+        // OPCIÓN 1: Retornar HTML con botón de descarga
+        $html = view('images.boleta-descargable', $datosBoleta)->render();
+        
+        return response($html)->header('Content-Type', 'text/html');
+
+    } catch (\Exception $e) {
+        Log::error('Error generando boleta: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al generar boleta: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
     /**
      * Generar ticket de venta en formato HTML para imprimir
      */

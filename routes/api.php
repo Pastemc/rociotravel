@@ -110,8 +110,10 @@ Route::prefix('pasajes')->group(function () {
     Route::post('/generar-ticket-venta', [PasajeController::class, 'generarTicketVenta']);
     
     // NUEVA RUTA PARA GENERAR IMAGEN JPG
-    Route::post('/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
     
+     Route::post('/pasajes/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
+      
+
     // ========== NUEVA RUTA PARA GUARDAR TICKET ==========
     Route::post('/guardar-ticket', [PasajeController::class, 'guardarTicket']);
 });
