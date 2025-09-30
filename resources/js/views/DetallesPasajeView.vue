@@ -470,15 +470,12 @@ export default {
       detalleActualId: null,
       puedeGenerarImagen: false,
       
-      // Modales
       mostrarModalEfectivo: false,
       mostrarModalPagoMixto: false,
       
-      // Datos de pago en efectivo
       cantidadCliente: 0,
       vuelto: 0,
       
-      // Datos de pago mixto
       pagoMixtoTemp: {
         efectivo: 0,
         yape: 0,
@@ -490,7 +487,6 @@ export default {
         plin: 0
       },
       
-      // Lista de embarcaciones - valores por defecto + carga desde API
       embarcaciones: [
         'KAORY',
         'DON JULIO',
@@ -509,7 +505,6 @@ export default {
         'DOÑA LIDIA'
       ],
 
-      // Puertos de embarque - valores por defecto + carga desde API
       puertosEmbarque: [
         'CALLE PEVAS #456',
         'CALLE PEVAS #408',
@@ -532,7 +527,6 @@ export default {
         'PUERTO PRINCIPAL DE'
       ],
 
-      // Horas disponibles con AM/PM
       horasDisponibles: [
         '06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM',
         '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
@@ -541,10 +535,8 @@ export default {
         '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'
       ],
 
-      // Detalles del pasaje (se cargarán automáticamente)
       detallesPasaje: [],
       
-      // Datos del viaje
       datosViaje: {
         embarcacion: '',
         puertoEmbarque: '',
@@ -593,28 +585,17 @@ export default {
   mounted() {
     console.log('🚀 Componente DetallesPasajeView montado')
     
-    // Asegurar que las listas están disponibles inmediatamente
     this.inicializarListas()
-    
-    // Cargar datos automáticamente cuando se monte el componente
     this.cargarDatosDesdeFormulario()
-    
-    // Cargar datos del cliente
     this.cargarDatosCliente()
-    
-    // Verificar nuevos datos del formulario
     this.verificarNuevosDatosFormulario()
-    
-    // Intentar cargar datos adicionales de APIs (opcional)
     this.cargarEmbarcacionesYPuertos()
   },
 
   methods: {
-    // NUEVO: Inicializar listas con valores por defecto
     inicializarListas() {
       console.log('📋 Inicializando listas de embarcaciones y puertos...')
       
-      // Verificar si las listas están vacías y llenarlas
       if (this.embarcaciones.length === 0) {
         this.embarcaciones = [
           'KAORY',
@@ -665,12 +646,10 @@ export default {
       })
     },
 
-    // CORREGIDO: Cargar embarcaciones y puertos desde la API
     async cargarEmbarcacionesYPuertos() {
       try {
         console.log('📡 Intentando cargar embarcaciones y puertos desde la API...')
         
-        // Intentar cargar embarcaciones
         try {
           const responseEmbarcaciones = await fetch('/api/embarcaciones', {
             method: 'GET',
@@ -686,7 +665,6 @@ export default {
             if (resultEmbarcaciones.success && resultEmbarcaciones.data) {
               const embarcacionesAPI = resultEmbarcaciones.data.map(embarcacion => embarcacion.nombre)
               
-              // Agregar nuevas embarcaciones que no estén en la lista original
               embarcacionesAPI.forEach(embarcacion => {
                 if (!this.embarcaciones.includes(embarcacion)) {
                   this.embarcaciones.push(embarcacion)
@@ -700,7 +678,6 @@ export default {
           console.log('⚠️ API de embarcaciones no disponible, usando valores por defecto')
         }
 
-        // Intentar cargar puertos de embarque
         try {
           const responsePuertos = await fetch('/api/puertos-embarque', {
             method: 'GET',
@@ -716,7 +693,6 @@ export default {
             if (resultPuertos.success && resultPuertos.data) {
               const puertosAPI = resultPuertos.data.map(puerto => puerto.nombre)
               
-              // Agregar nuevos puertos que no estén en la lista original
               puertosAPI.forEach(puerto => {
                 if (!this.puertosEmbarque.includes(puerto)) {
                   this.puertosEmbarque.push(puerto)
@@ -730,24 +706,19 @@ export default {
           console.log('⚠️ API de puertos no disponible, usando valores por defecto')
         }
 
-        // Verificar si hay nuevos datos desde el formulario de agregación
         this.verificarNuevosDatosFormulario()
         
       } catch (error) {
         console.log('ℹ️ APIs no disponibles, continuando con valores por defecto')
-        // Los valores por defecto ya están cargados, así que continuamos normalmente
         this.verificarNuevosDatosFormulario()
       }
     },
 
-    // MEJORADO: Verificar y agregar datos del formulario de agregación
     verificarNuevosDatosFormulario() {
       console.log('🔍 Verificando nuevos datos desde formulario...')
       
       let huboActualizacion = false
       
-      // Verificar si hay una nueva embarcación desde el formulario
-      // CORREGIDO: Usar los nombres correctos que guarda AgregarDetalleView
       const nuevaEmbarcacion = sessionStorage.getItem('nuevaEmbarcacion') || 
                               sessionStorage.getItem('nuevaEmbarcacionAgregada')
       if (nuevaEmbarcacion && nuevaEmbarcacion.trim() !== '') {
@@ -755,17 +726,13 @@ export default {
           this.embarcaciones.push(nuevaEmbarcacion)
           huboActualizacion = true
         }
-        // Seleccionar automáticamente la nueva embarcación
         this.datosViaje.embarcacion = nuevaEmbarcacion
         console.log('🚢 Nueva embarcación agregada automáticamente:', nuevaEmbarcacion)
         this.mostrarMensaje(`Embarcación "${nuevaEmbarcacion}" agregada automáticamente`, 'success')
-        // Limpiar ambos sessionStorage
         sessionStorage.removeItem('nuevaEmbarcacion')
         sessionStorage.removeItem('nuevaEmbarcacionAgregada')
       }
 
-      // Verificar si hay un nuevo puerto desde el formulario
-      // CORREGIDO: Usar los nombres correctos que guarda AgregarDetalleView
       const nuevoPuerto = sessionStorage.getItem('nuevoPuertoEmbarque') || 
                          sessionStorage.getItem('nuevoPuertoAgregado')
       if (nuevoPuerto && nuevoPuerto.trim() !== '') {
@@ -773,19 +740,15 @@ export default {
           this.puertosEmbarque.push(nuevoPuerto)
           huboActualizacion = true
         }
-        // Seleccionar automáticamente el nuevo puerto
         this.datosViaje.puertoEmbarque = nuevoPuerto
         console.log('⚓ Nuevo puerto agregado automáticamente:', nuevoPuerto)
         this.mostrarMensaje(`Puerto "${nuevoPuerto}" agregado automáticamente`, 'success')
-        // Limpiar ambos sessionStorage
         sessionStorage.removeItem('nuevoPuertoEmbarque')
         sessionStorage.removeItem('nuevoPuertoAgregado')
       }
 
-      // Validar imagen después de agregar nuevos datos
       if (huboActualizacion) {
         this.validarImagen()
-        // Forzar actualización del DOM
         this.$forceUpdate()
       }
 
@@ -797,14 +760,12 @@ export default {
       })
     },
 
-    // Nuevos métodos para manejo de medios de pago
     seleccionarMedioPago(tipo) {
       this.datosViaje.medioPago = tipo
       this.datosViaje.pagoMixto = false
       this.limpiarPagoMixto()
       this.validarImagen()
       
-      // Configurar detalle según tipo de pago
       if (tipo === 'efectivo') {
         this.abrirModalEfectivo()
       } else {
@@ -825,7 +786,6 @@ export default {
       this.validarImagen()
     },
 
-    // Modal de Efectivo
     abrirModalEfectivo() {
       this.cantidadCliente = this.totalGeneral
       this.calcularVuelto()
@@ -850,7 +810,6 @@ export default {
       }
     },
 
-    // Modal de Pago Mixto
     abrirModalPagoMixto() {
       this.pagoMixtoTemp = {
         efectivo: 0,
@@ -877,7 +836,6 @@ export default {
       if (this.diferenciaPago === 0) {
         this.pagoMixtoDetalle = { ...this.pagoMixtoTemp }
         
-        // Crear descripción detallada
         let detalles = []
         if (this.pagoMixtoDetalle.efectivo > 0) {
           detalles.push(`Efectivo: S/ ${this.pagoMixtoDetalle.efectivo.toFixed(2)}`)
@@ -890,15 +848,11 @@ export default {
         }
         
         this.datosViaje.detallesPago = detalles.join(' + ')
-        
-        // CORREGIDO: Asegurar que el pago mixto se marque correctamente
         this.datosViaje.pagoMixto = true
         this.datosViaje.medioPago = 'mixto'
         
         this.mostrarMensaje('Pago mixto configurado correctamente', 'success')
         this.cerrarModalPagoMixto()
-        
-        // Validar después de configurar
         this.validarImagen()
         
         console.log('✅ Pago mixto confirmado:', {
@@ -921,7 +875,6 @@ export default {
       }
     },
 
-    // Métodos auxiliares
     getPaymentIcon(tipo) {
       const iconos = {
         efectivo: 'fas fa-money-bill-wave',
@@ -940,7 +893,6 @@ export default {
       return labels[tipo] || tipo
     },
 
-    // Método para cargar datos del cliente desde sessionStorage
     cargarDatosCliente() {
       console.log('👤 Cargando datos del cliente...')
       
@@ -950,7 +902,6 @@ export default {
           const cliente = JSON.parse(datosCliente)
           console.log('✅ Datos del cliente encontrados:', cliente)
           
-          // Cargar los datos en los campos correspondientes
           this.datosViaje.nombreCliente = cliente.nombre || ''
           this.datosViaje.documentoCliente = cliente.documento || ''
           this.datosViaje.contactoCliente = cliente.contacto || ''
@@ -968,7 +919,6 @@ export default {
       }
     },
 
-    // ACTUALIZADO: Validar si se puede generar imagen
     validarImagen() {
       const camposBasicos = this.detallesPasaje.length > 0 && 
                            this.datosViaje.embarcacion && 
@@ -976,18 +926,15 @@ export default {
                            this.datosViaje.horaEmbarque &&
                            this.datosViaje.horaSalida
 
-      // Validar medio de pago
       let medioPagoValido = false
       
       if (this.datosViaje.pagoMixto) {
-        // Para pago mixto, verificar que esté configurado
         medioPagoValido = this.datosViaje.detallesPago && 
                          this.datosViaje.detallesPago.trim() !== '' &&
                          (this.pagoMixtoDetalle.efectivo > 0 || 
                           this.pagoMixtoDetalle.yape > 0 || 
                           this.pagoMixtoDetalle.plin > 0)
       } else {
-        // Para pago simple, verificar que haya medio de pago
         medioPagoValido = this.datosViaje.medioPago && 
                          this.datosViaje.medioPago.trim() !== ''
       }
@@ -1008,7 +955,6 @@ export default {
       })
     },
 
-    // CORREGIDO: Generar imagen en tiempo real - descarga automática JPG
     async generarImagenTiempoReal() {
       console.log('🖼️ Iniciando generación de imagen tiempo real...')
       
@@ -1025,17 +971,15 @@ export default {
         
         console.log('📤 Enviando datos para imagen:', datosCompletos)
 
-        // Lista de rutas a intentar en orden de prioridad
         const rutasParaProbar = [
-          '/imagen-boleta',                           // Ruta temporal funcional
-          '/api/pasajes/generar-imagen-tiempo-real',  // Ruta API principal
-          '/generar-imagen-pasaje'                    // Ruta directa
+          '/imagen-boleta',
+          '/api/pasajes/generar-imagen-tiempo-real',
+          '/generar-imagen-pasaje'
         ]
 
         let response = null
         let rutaUsada = null
 
-        // Intentar cada ruta hasta que una funcione
         for (const ruta of rutasParaProbar) {
           try {
             console.log(`🔄 Intentando ruta: ${ruta}`)
@@ -1044,7 +988,7 @@ export default {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Accept': '*/*',
+                'Accept': 'text/html,application/json,image/*',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
               },
@@ -1071,161 +1015,78 @@ export default {
           throw new Error('Ninguna ruta de generación de imagen está disponible. Verifica la configuración del servidor.')
         }
 
-        console.log(`✅ Imagen generada usando ruta: ${rutaUsada}`)
+        console.log(`✅ Respuesta recibida desde ruta: ${rutaUsada}`)
 
-        // Procesar la respuesta y convertir a JPG
         const contentType = response.headers.get('content-type')
+        console.log('📄 Content-Type:', contentType)
         
-        if (contentType && contentType.includes('text/html')) {
-          // Respuesta HTML - convertir a imagen JPG
-          const htmlContent = await response.text()
-          console.log('📄 HTML recibido, convirtiendo a JPG...')
-          
-          await this.convertirHtmlAImagenJPG(htmlContent)
-        } else if (contentType && contentType.includes('application/json')) {
-          // Respuesta JSON con base64
+        if (contentType && contentType.includes('application/json')) {
           const result = await response.json()
           
           if (result.success && result.imagen_base64) {
-            this.procesarImagenBase64(result.imagen_base64)
+            console.log('✅ Imagen base64 recibida, procesando...')
+            this.descargarImagenDesdeBase64(result.imagen_base64)
           } else {
             throw new Error(result.message || 'Error al generar la imagen')
           }
         } else if (contentType && (contentType.includes('image/jpeg') || contentType.includes('image/png'))) {
-          // Respuesta directa de imagen
+          console.log('✅ Imagen directa recibida, descargando...')
           const blob = await response.blob()
-          this.descargarImagen(blob)
+          this.descargarImagenJPG(blob)
+        } else if (contentType && contentType.includes('text/html')) {
+          console.log('📄 HTML recibido, abriendo en nueva ventana...')
+          const htmlContent = await response.text()
+          const newWindow = window.open('', '_blank', 'width=800,height=1000')
+          if (newWindow) {
+            newWindow.document.write(htmlContent)
+            newWindow.document.close()
+            this.mostrarMensaje('Boleta generada. Use clic derecho > Guardar imagen como... para descargar', 'success')
+          } else {
+            throw new Error('No se pudo abrir la ventana. Verifique el bloqueador de ventanas emergentes.')
+          }
         } else {
-          throw new Error('Tipo de respuesta no reconocido')
+          throw new Error('Tipo de respuesta no reconocido: ' + contentType)
         }
 
       } catch (error) {
-        console.error('Error generando imagen:', error)
+        console.error('❌ Error generando imagen:', error)
         this.mostrarMensaje(`Error al generar la imagen: ${error.message}`, 'error')
       } finally {
         this.cargando = false
       }
     },
 
-    // NUEVO: Convertir HTML a imagen JPG y descargar automáticamente
-    async convertirHtmlAImagenJPG(htmlContent) {
+    descargarImagenDesdeBase64(base64Data) {
       try {
-        // Crear un iframe oculto para renderizar el HTML
-        const iframe = document.createElement('iframe')
-        iframe.style.position = 'absolute'
-        iframe.style.left = '-9999px'
-        iframe.style.width = '800px'
-        iframe.style.height = '1000px'
-        iframe.style.border = 'none'
-        iframe.style.background = 'white'
-        document.body.appendChild(iframe)
+        console.log('🔄 Convirtiendo base64 a blob...')
         
-        // Escribir el HTML en el iframe
-        iframe.contentDocument.open()
-        iframe.contentDocument.write(htmlContent)
-        iframe.contentDocument.close()
+        const base64Limpio = base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '')
         
-        // Esperar a que se cargue completamente
-        await new Promise(resolve => {
-          iframe.onload = resolve
-          setTimeout(resolve, 2000) // Timeout de seguridad
-        })
-        
-        // Verificar si html2canvas está disponible
-        if (window.html2canvas) {
-          console.log('📷 Usando html2canvas para generar JPG...')
-          
-          const canvas = await html2canvas(iframe.contentDocument.body, {
-            backgroundColor: '#ffffff',
-            scale: 2, // Mayor calidad
-            useCORS: true,
-            allowTaint: true,
-            width: 800,
-            height: 1000
-          })
-          
-          // Convertir canvas a blob JPG
-          canvas.toBlob((blob) => {
-            this.descargarImagenJPG(blob)
-            document.body.removeChild(iframe)
-          }, 'image/jpeg', 0.9) // Calidad 90%
-          
-        } else {
-          console.log('📷 html2canvas no disponible, usando método alternativo...')
-          
-          // Método alternativo: crear imagen desde el DOM
-          await this.crearImagenDesdeDOM(iframe.contentDocument.body)
-          document.body.removeChild(iframe)
+        const byteCharacters = atob(base64Limpio)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
         }
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: 'image/jpeg' })
         
+        console.log('✅ Blob creado, tamaño:', blob.size, 'bytes')
+        
+        this.descargarImagenJPG(blob)
       } catch (error) {
-        console.error('Error convirtiendo HTML a JPG:', error)
-        this.mostrarMensaje('Error al convertir la boleta a imagen JPG', 'error')
+        console.error('❌ Error procesando imagen base64:', error)
+        this.mostrarMensaje('Error al procesar la imagen generada: ' + error.message, 'error')
       }
     },
 
-    // NUEVO: Crear imagen desde DOM (método alternativo)
-    async crearImagenDesdeDOM(elemento) {
-      try {
-        // Crear un canvas manualmente
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        
-        // Configurar tamaño del canvas
-        canvas.width = 800
-        canvas.height = 1000
-        
-        // Fondo blanco
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        
-        // Crear imagen SVG del contenido
-        const svgData = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000">
-            <foreignObject width="100%" height="100%">
-              <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial, sans-serif; padding: 20px;">
-                ${elemento.innerHTML}
-              </div>
-            </foreignObject>
-          </svg>
-        `
-        
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-        const svgUrl = URL.createObjectURL(svgBlob)
-        
-        const img = new Image()
-        img.onload = () => {
-          ctx.drawImage(img, 0, 0)
-          
-          // Convertir a JPG
-          canvas.toBlob((blob) => {
-            this.descargarImagenJPG(blob)
-            URL.revokeObjectURL(svgUrl)
-          }, 'image/jpeg', 0.9)
-        }
-        
-        img.onerror = () => {
-          console.error('Error cargando imagen SVG')
-          this.mostrarMensaje('Error al procesar la imagen', 'error')
-          URL.revokeObjectURL(svgUrl)
-        }
-        
-        img.src = svgUrl
-        
-      } catch (error) {
-        console.error('Error en método alternativo:', error)
-        this.mostrarMensaje('Error al crear imagen desde DOM', 'error')
-      }
-    },
-
-    // NUEVO: Descargar imagen JPG con nombre personalizado
     descargarImagenJPG(blob) {
       try {
+        console.log('💾 Iniciando descarga de imagen JPG...')
+        
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
         
-        // Crear nombre de archivo con datos del cliente y fecha
         const fecha = new Date()
         const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`
         const horaStr = `${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}`
@@ -1239,113 +1100,30 @@ export default {
         link.download = nombreArchivo
         link.style.display = 'none'
         
-        // Agregar al DOM, hacer clic y remover
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
         
-        // Limpiar URL
         setTimeout(() => {
           window.URL.revokeObjectURL(url)
         }, 1000)
         
-        this.mostrarMensaje(`Imagen JPG descargada: ${nombreArchivo}`, 'success')
+        this.mostrarMensaje(`Imagen descargada exitosamente: ${nombreArchivo}`, 'success')
         
-        console.log('✅ Imagen JPG descargada exitosamente:', nombreArchivo)
+        console.log('✅ Imagen descargada:', nombreArchivo)
         
       } catch (error) {
-        console.error('Error descargando imagen JPG:', error)
-        this.mostrarMensaje('Error al descargar la imagen JPG', 'error')
+        console.error('❌ Error descargando imagen:', error)
+        this.mostrarMensaje('Error al descargar la imagen: ' + error.message, 'error')
       }
     },
 
-    // NUEVO: Procesar imagen base64
-    procesarImagenBase64(base64Data) {
-      try {
-        const byteCharacters = atob(base64Data)
-        const byteNumbers = new Array(byteCharacters.length)
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i)
-        }
-        const byteArray = new Uint8Array(byteNumbers)
-        const blob = new Blob([byteArray], { type: 'image/jpeg' })
-        
-        this.descargarImagen(blob)
-      } catch (error) {
-        console.error('Error procesando imagen base64:', error)
-        this.mostrarMensaje('Error al procesar la imagen generada', 'error')
-      }
-    },
-
-    // NUEVO: Convertir HTML a imagen usando canvas
-    async convertirHtmlAImagen(htmlContent) {
-      try {
-        // Crear un iframe temporal para renderizar el HTML
-        const iframe = document.createElement('iframe')
-        iframe.style.position = 'absolute'
-        iframe.style.left = '-9999px'
-        iframe.style.width = '800px'
-        iframe.style.height = '600px'
-        document.body.appendChild(iframe)
-        
-        // Escribir el HTML en el iframe
-        iframe.contentDocument.write(htmlContent)
-        iframe.contentDocument.close()
-        
-        // Esperar a que se cargue
-        await new Promise(resolve => {
-          iframe.onload = resolve
-          setTimeout(resolve, 1000) // Timeout de seguridad
-        })
-        
-        // Intentar usar html2canvas si está disponible
-        if (window.html2canvas) {
-          const canvas = await html2canvas(iframe.contentDocument.body)
-          canvas.toBlob((blob) => {
-            this.descargarImagen(blob)
-            document.body.removeChild(iframe)
-          }, 'image/jpeg', 0.9)
-        } else {
-          // Si no hay html2canvas, mostrar el HTML en una nueva ventana
-          const newWindow = window.open('', '_blank', 'width=800,height=600')
-          newWindow.document.write(htmlContent)
-          newWindow.document.close()
-          this.mostrarMensaje('Boleta abierta en nueva ventana. Use Ctrl+P para imprimir.', 'info')
-          document.body.removeChild(iframe)
-        }
-        
-      } catch (error) {
-        console.error('Error convirtiendo HTML a imagen:', error)
-        this.mostrarMensaje('Error al convertir la boleta a imagen', 'error')
-      }
-    },
-
-    // NUEVO: Método auxiliar para descargar imagen
-    descargarImagen(blob) {
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      
-      const fecha = new Date()
-      const nombreArchivo = `pasaje-${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}-${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}.jpg`
-      
-      link.download = nombreArchivo
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
-      this.mostrarMensaje('Imagen generada y descargada exitosamente', 'success')
-    },
-
-    // NUEVO: Preparar datos para la imagen - CORREGIDO PARA PAGO MIXTO
     prepararDatosParaImagen() {
       const ahora = new Date()
       const fechaActual = this.formatearFecha(ahora)
       const horaActual = this.formatearHora(ahora)
       const primerDetalle = this.detallesPasaje[0]
       
-      // CORREGIDO: Determinar medio de pago para imagen
       let medioPagoImagen = 'efectivo'
       let esPagoMixto = false
       let detallesPago = ''
@@ -1366,13 +1144,11 @@ export default {
       }
       
       const datosParaImagen = {
-        // Datos de emisión
         fecha_emision: fechaActual,
         hora_emision: horaActual,
         numero_boleta: this.generarNumeroBoleta(),
         operador: 'ROCÍO TRAVEL',
         
-        // Datos del cliente
         cliente: {
           nombre: this.datosViaje.nombreCliente || 'CLIENTE',
           documento: this.datosViaje.documentoCliente || '',
@@ -1380,30 +1156,25 @@ export default {
           nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
         },
         
-        // Datos del pasaje
         cantidad: primerDetalle.cantidad,
         descripcion: primerDetalle.descripcion,
         precio_unitario: primerDetalle.precio_unitario,
         subtotal: primerDetalle.subtotal,
         total: this.totalGeneral,
         
-        // Datos del viaje
         embarcacion: this.datosViaje.embarcacion,
         puerto_embarque: this.datosViaje.puertoEmbarque,
         hora_embarque: this.datosViaje.horaEmbarque,
         hora_salida: this.datosViaje.horaSalida,
         
-        // CORREGIDO: Datos de pago
         medio_pago: medioPagoImagen,
         pago_mixto: esPagoMixto,
         detalles_pago: detallesPago,
         
-        // Datos adicionales
         nota: this.datosViaje.nota,
         destino: primerDetalle.destino || '',
         ruta: primerDetalle.ruta || primerDetalle.descripcion,
         
-        // Para la vista blade
         tipo_documento: 'BOLETA DE VENTA',
         fecha_viaje: fechaActual
       }
@@ -1412,7 +1183,6 @@ export default {
       return datosParaImagen
     },
 
-    // NUEVO: Generar número de boleta
     generarNumeroBoleta() {
       const ahora = new Date()
       const año = ahora.getFullYear().toString().slice(-2)
@@ -1425,7 +1195,6 @@ export default {
       return `BOL-${año}${mes}${dia}-${hora}${minuto}${random}`
     },
 
-    // Imprimir Ticket de Venta - CORREGIDO PARA PAGO MIXTO
     async imprimirTicketVenta() {
       console.log('🎫 Iniciando generación de ticket de venta...')
       
@@ -1484,7 +1253,6 @@ export default {
       }
     },
 
-    // Preparar datos para el ticket de venta - CORREGIDO
     prepararDatosParaTicket() {
       const ahora = new Date()
       const fechaActual = this.formatearFecha(ahora)
@@ -1495,7 +1263,6 @@ export default {
         throw new Error('No hay detalles de pasaje disponibles')
       }
       
-      // Determinar medio de pago para el ticket
       let medioPagoTicket = 'efectivo'
       let esPagoMixto = false
       let detallesPago = ''
@@ -1585,7 +1352,6 @@ export default {
       return `${horas}:${minutos}:${segundos}`
     },
 
-    // Cargar datos desde el formulario anterior
     cargarDatosDesdeFormulario() {
       console.log('🔍 Cargando datos desde el formulario anterior...')
       
@@ -1627,7 +1393,6 @@ export default {
       }
     },
 
-    // Guardar todo - CORREGIDO PARA PAGO MIXTO
     async guardarTodo() {
       console.log('💾 Iniciando guardado completo...')
       
@@ -1652,7 +1417,6 @@ export default {
       }
     },
 
-    // Validar formulario completo - CORREGIDO PARA PAGO MIXTO
     validarFormularioCompleto() {
       if (this.detallesPasaje.length === 0) {
         this.mostrarMensaje('No hay detalles de pasaje para guardar', 'warning')
@@ -1679,7 +1443,6 @@ export default {
         return false
       }
 
-      // Validar medio de pago
       if (this.datosViaje.pagoMixto) {
         if (!this.datosViaje.detallesPago || this.datosViaje.detallesPago.trim() === '') {
           this.mostrarMensaje('Debe configurar el pago mixto correctamente', 'warning')
@@ -1699,11 +1462,9 @@ export default {
       return true
     },
 
-    // Enviar todos los datos - CORREGIDO PARA PAGO MIXTO
     async enviarTodosLosDatos() {
       const primerDetalle = this.detallesPasaje[0]
       
-      // Determinar medio de pago para guardar
       let medioPagoGuardar = 'efectivo'
       let esPagoMixtoGuardar = false
       let detallesPagoGuardar = ''
@@ -1798,12 +1559,10 @@ export default {
       }
     },
 
-    // NUEVO: Refrescar listas periódicamente
     refresharListas() {
       this.cargarEmbarcacionesYPuertos()
     },
 
-    // Métodos de mensajes
     mostrarMensaje(texto, tipo = 'info') {
       this.mensaje = texto
       this.tipoMensaje = tipo
@@ -1826,7 +1585,6 @@ export default {
       deep: true
     },
     
-    // NUEVO: Watch para listas - forzar reactividad
     embarcaciones: {
       handler(newVal) {
         console.log('Embarcaciones actualizadas:', newVal.length)
@@ -1845,7 +1603,6 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos base existentes... */
 .detalles-pasaje-container {
   background: #f8f9fa;
   min-height: 100vh;
@@ -1853,7 +1610,6 @@ export default {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Header Section */
 .header-section {
   display: flex;
   justify-content: space-between;
@@ -1875,7 +1631,6 @@ export default {
   gap: 12px;
 }
 
-/* Botón Imagen (anteriormente PDF) */
 .btn-imagen {
   padding: 12px 20px;
   border: none;
@@ -1902,7 +1657,6 @@ export default {
   opacity: 0.6;
 }
 
-/* Botón Ticket */
 .btn-ticket {
   padding: 12px 20px;
   border: none;
@@ -1949,7 +1703,6 @@ export default {
   box-shadow: 0 5px 15px rgba(108,117,125,0.3);
 }
 
-/* Tabla de Detalles */
 .detalles-table-section {
   background: white;
   border-radius: 12px;
@@ -2015,7 +1768,6 @@ export default {
   font-size: 16px;
 }
 
-/* Total Section */
 .total-section {
   margin-top: 20px;
   padding: 20px;
@@ -2047,7 +1799,6 @@ export default {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Form Section */
 .form-section {
   background: white;
   border-radius: 12px;
@@ -2080,7 +1831,6 @@ export default {
   font-size: 14px;
 }
 
-/* Estilos para campos bloqueados */
 .cliente-locked-info {
   background: linear-gradient(135deg, #fff3cd, #ffeaa7);
   border: 2px solid #ffc107;
@@ -2157,7 +1907,6 @@ export default {
   box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
 }
 
-/* Payment Methods MEJORADO */
 .payment-methods {
   display: flex;
   flex-direction: column;
@@ -2221,7 +1970,6 @@ export default {
   pointer-events: none;
 }
 
-/* Resumen de pago */
 .payment-summary {
   margin-top: 15px;
   padding: 12px;
@@ -2254,7 +2002,6 @@ export default {
   padding: 4px 0;
 }
 
-/* ESTILOS PARA MODALES */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2347,7 +2094,6 @@ export default {
   background: #f8f9fa;
 }
 
-/* ESTILOS PARA MODAL DE EFECTIVO */
 .pago-efectivo-content {
   display: flex;
   flex-direction: column;
@@ -2396,7 +2142,6 @@ export default {
   font-size: 16px;
 }
 
-/* ESTILOS PARA MODAL DE PAGO MIXTO */
 .pago-mixto-content {
   display: flex;
   flex-direction: column;
@@ -2500,7 +2245,6 @@ export default {
   font-weight: 700;
 }
 
-/* BOTONES DE MODAL */
 .btn-confirm, .btn-cancel {
   padding: 12px 24px;
   border: none;
@@ -2540,7 +2284,6 @@ export default {
   box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
 }
 
-/* Form Actions */
 .form-actions {
   display: flex;
   gap: 15px;
@@ -2582,7 +2325,6 @@ export default {
   box-shadow: 0 5px 15px rgba(108,117,125,0.3);
 }
 
-/* Loading */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -2622,7 +2364,6 @@ export default {
   font-weight: 500;
 }
 
-/* Notifications */
 .notification {
   position: fixed;
   top: 20px;
@@ -2688,7 +2429,6 @@ export default {
   opacity: 1;
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .form-grid {
     grid-template-columns: 1fr;
@@ -2777,7 +2517,6 @@ export default {
     justify-content: center;
   }
 }
-
 @media (max-width: 480px) {
   .detalles-pasaje-container {
     padding: 10px;

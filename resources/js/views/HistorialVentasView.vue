@@ -582,29 +582,18 @@ export default {
       }
       
       try {
-        const response = await fetch(`/api/historial-ventas/${venta.id}/generar-ticket`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'text/html'
-          }
-        })
+        // Usar la ruta correcta que ya existe en web.php (sin /api/)
+        const ticketUrl = `/historial-ventas/${venta.id}/ticket`
+        const ventana = window.open(ticketUrl, '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes')
         
-        if (response.ok) {
-          const html = await response.text()
-          
-          const ventana = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes')
-          ventana.document.write(html)
-          ventana.document.close()
-          ventana.focus()
-          
+        if (ventana) {
           this.mostrarNotif('Ticket visualizado correctamente', 'success')
         } else {
-          throw new Error('Error al generar el ticket')
+          throw new Error('No se pudo abrir la ventana del ticket. Verifique el bloqueador de ventanas emergentes.')
         }
       } catch (error) {
         console.error('Error:', error)
-        this.mostrarNotif('Error al visualizar el ticket', 'error')
+        this.mostrarNotif('Error al visualizar el ticket: ' + error.message, 'error')
       }
     },
 
@@ -698,6 +687,7 @@ export default {
 </script>
 
 <style scoped>
+/* Tus estilos permanecen exactamente iguales */
 .historial-container {
   padding: 20px;
   background: #f8f9fa;

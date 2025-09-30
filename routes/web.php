@@ -55,8 +55,9 @@ Route::prefix('api')->group(function () {
                 // PASAJES
                 'GET /api/pasajes' => 'Listar pasajes',
                 'POST /api/pasajes' => 'Crear pasaje',
-                'POST /api/pasajes/generar-imagen-tiempo-real' => 'Generar imagen JPG', // ACTUALIZADO
+                'POST /api/pasajes/generar-imagen-tiempo-real' => 'Generar imagen JPG',
                 'POST /api/pasajes/generar-ticket-venta' => 'Generar ticket de venta',
+                'POST /api/pasajes/guardar-ticket' => 'Guardar ticket en BD', // NUEVA RUTA AGREGADA
                 
                 // HISTORIAL DE VENTAS
                 'GET /api/historial-ventas' => 'Listar historial de ventas',
@@ -64,6 +65,7 @@ Route::prefix('api')->group(function () {
                 'PUT /api/historial-ventas/{id}/anular' => 'Anular venta',
                 'GET /api/historial-ventas/{id}/pdf' => 'Descargar PDF',
                 'GET /api/historial-ventas/{id}/ticket' => 'Imprimir ticket',
+                'GET /api/historial-ventas/{id}/visualizar-ticket' => 'Visualizar ticket guardado', // NUEVA RUTA AGREGADA
             ]
         ]);
     });
@@ -130,6 +132,9 @@ Route::prefix('api')->group(function () {
     Route::post('pasajes/generar-ticket-venta', [PasajeController::class, 'generarTicketVenta']);
     // NUEVA RUTA PARA GENERAR IMAGEN JPG
     Route::post('pasajes/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
+    
+    // ========== NUEVA RUTA PARA GUARDAR TICKET ==========
+    Route::post('pasajes/guardar-ticket', [PasajeController::class, 'guardarTicket']);
 
     // ========== HISTORIAL DE VENTAS - SISTEMA PRINCIPAL ==========
     
@@ -152,6 +157,10 @@ Route::prefix('api')->group(function () {
     Route::put('historial-ventas/{id}/completar', [HistorialVentaController::class, 'completar']);
     Route::get('historial-ventas/{id}/pdf', [HistorialVentaController::class, 'generarPDF']);
     Route::get('historial-ventas/{id}/ticket', [HistorialVentaController::class, 'generarTicket']);
+    
+    // ========== NUEVA RUTA PARA VISUALIZAR TICKET GUARDADO ==========
+    Route::get('historial-ventas/{id}/visualizar-ticket', [HistorialVentaController::class, 'visualizarTicket']);
+    
     Route::delete('historial-ventas/{id}', [HistorialVentaController::class, 'destroy']);
 });
 
@@ -478,17 +487,19 @@ Route::get('/test-sistema', function () {
                 '/' => 'Página principal',
                 '/datos-cliente' => 'Registro de clientes',
                 '/agregar-detalles-pasaje' => 'Agregar detalles',
-                '/agregar-actualizar-detalles' => 'Agregar/Actualizar embarcaciones y puertos', // NUEVO
+                '/agregar-actualizar-detalles' => 'Agregar/Actualizar embarcaciones y puertos',
                 '/detalles-pasaje' => 'Finalizar pasaje',
                 '/historial-ventas' => 'Historial de ventas',
-                '/embarcaciones' => 'Gestión de embarcaciones', // NUEVO
-                '/puertos-embarque' => 'Gestión de puertos' // NUEVO
+                '/embarcaciones' => 'Gestión de embarcaciones',
+                '/puertos-embarque' => 'Gestión de puertos'
             ],
             'nuevas_funcionalidades' => [
                 'auto_llenado_embarcaciones' => '/api/embarcaciones',
                 'auto_llenado_puertos' => '/api/puertos-embarque',
                 'generar_imagen_jpg' => '/api/pasajes/generar-imagen-tiempo-real',
-                'generar_imagen_directa' => '/generar-imagen-pasaje'
+                'generar_imagen_directa' => '/generar-imagen-pasaje',
+                'guardar_ticket' => '/api/pasajes/guardar-ticket',
+                'visualizar_ticket' => '/api/historial-ventas/{id}/visualizar-ticket'
             ],
             'auto_llenado_test' => [
                 'endpoint' => '/api/clientes/buscar-por-documento/{numero_documento}',
@@ -559,6 +570,7 @@ Route::get('/test-historial', function () {
                 'POST /historial-ventas/{id}/anular' => 'Anular venta',
                 'GET /historial-ventas/{id}/pdf' => 'Descargar PDF',
                 'GET /historial-ventas/{id}/ticket' => 'Imprimir ticket',
+                'GET /historial-ventas/{id}/visualizar-ticket' => 'Visualizar ticket guardado',
             ],
             'timestamp' => now()
         ]);

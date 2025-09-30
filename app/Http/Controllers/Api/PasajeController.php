@@ -515,6 +515,28 @@ class PasajeController extends Controller
         }
     }
 
+    public function guardarTicket(Request $request)
+{
+    try {
+        $datos = $request->all();
+        
+        // Aquí guardas el ticket en la base de datos
+        // Por ejemplo, en una tabla 'tickets' o como campo en 'pasajes'
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket guardado correctamente',
+            'data' => $datos
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al guardar el ticket: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
     /**
      * Actualizar un pasaje
      */

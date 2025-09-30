@@ -158,7 +158,7 @@ class HistorialVentaController extends Controller
     }
 
     /**
-     * Crear nueva venta en el historial (método opcional)
+     * Crear nueva venta en el historial
      */
     public function store(Request $request)
     {
@@ -184,8 +184,8 @@ class HistorialVentaController extends Controller
                 'hora_embarque' => 'required|string|max:20',
                 'hora_salida' => 'required|string|max:20',
                 
-                // Datos de pago (requeridos)
-                'medio_pago' => 'required|string|in:efectivo,yape,plin,transferencia,tarjeta',
+                // Datos de pago (requeridos) - ACTUALIZADO CON 'mixto'
+                'medio_pago' => 'required|string|in:efectivo,yape,plin,transferencia,tarjeta,mixto',
                 'pago_mixto' => 'sometimes|boolean',
                 'detalles_pago' => 'nullable|string|max:255',
                 
@@ -213,6 +213,27 @@ class HistorialVentaController extends Controller
                 ], 422);
             }
 
+            // LÓGICA MEJORADA PARA PAGO MIXTO
+            $medioPago = $request->medio_pago;
+            $pagoMixto = $request->pago_mixto ?? false;
+            $detallesPago = $request->detalles_pago;
+
+            // Si es pago mixto, forzar medio_pago a 'mixto' y generar detalles
+            if ($pagoMixto) {
+                $medioPago = 'mixto';
+                // Si no hay detalles proporcionados, generar unos automáticamente
+                if (empty($detallesPago)) {
+                    $detallesPago = 'Pago mixto - Combinación de medios de pago';
+                }
+            }
+
+            Log::info('Creando venta con datos de pago', [
+                'medio_pago_original' => $request->medio_pago,
+                'medio_pago_final' => $medioPago,
+                'pago_mixto' => $pagoMixto,
+                'detalles_pago' => $detallesPago
+            ]);
+
             $venta = HistorialVenta::create([
                 // Referencias
                 'pasaje_id' => $request->pasaje_id,
@@ -228,6 +249,7 @@ class HistorialVentaController extends Controller
                 'descripcion' => $request->descripcion,
                 'precio_unitario' => $request->precio_unitario,
                 'subtotal' => $request->subtotal,
+                'total' => $request->subtotal, // Asumiendo que no hay impuestos
                 'destino' => $request->destino,
                 'ruta' => $request->ruta,
                 
@@ -236,26 +258,40 @@ class HistorialVentaController extends Controller
                 'puerto_embarque' => $request->puerto_embarque,
                 'hora_embarque' => $request->hora_embarque,
                 'hora_salida' => $request->hora_salida,
+                'fecha_viaje' => now(), // O $request->fecha_viaje si lo envías
                 
-                // Datos de pago
-                'medio_pago' => $request->medio_pago,
-                'pago_mixto' => $request->pago_mixto ?? false,
-                'detalles_pago' => $request->detalles_pago,
+                // Datos de pago - CORREGIDO
+                'medio_pago' => $medioPago,
+                'pago_mixto' => $pagoMixto,
+                'detalles_pago' => $detallesPago,
                 
                 // Estado y observaciones
                 'estado' => $request->estado ?? 'activo',
-                'nota' => $request->nota
+                'nota' => $request->nota,
+                
+                // Auditoría
+                'user_id' => auth()->id(), // Si tienes autenticación
+                'numero_ticket' => 'TEMP-' . time(), // Temporal, se actualiza después
             ]);
 
-            Log::info('Venta creada directamente en historial', [
+            // Generar número de ticket único basado en el ID
+            $venta->update([
+                'numero_ticket' => $venta->generarNumeroTicket(),
+                'codigo_venta' => 'VENTA-' . str_pad($venta->id, 6, '0', STR_PAD_LEFT)
+            ]);
+
+            Log::info('Venta creada exitosamente en historial', [
                 'venta_id' => $venta->id,
                 'cliente' => $venta->nombre_cliente,
-                'subtotal' => $venta->subtotal
+                'subtotal' => $venta->subtotal,
+                'medio_pago' => $venta->medio_pago,
+                'pago_mixto' => $venta->pago_mixto,
+                'numero_ticket' => $venta->numero_ticket
             ]);
 
             return response()->json([
                 'success' => true,
-                'data' => $venta,
+                'data' => $venta->fresh(),
                 'message' => 'Venta creada exitosamente en el historial'
             ], 201);
 
@@ -379,7 +415,7 @@ class HistorialVentaController extends Controller
     }
 
     /**
-     * Generar ticket de una venta
+     * Generar ticket de una venta - CORREGIDO: usa hora de creación, no hora actual
      */
     public function generarTicket($id)
     {
@@ -400,7 +436,13 @@ class HistorialVentaController extends Controller
                 ], 400);
             }
 
-            // Preparar datos para el ticket
+            // USAR LA FECHA/HORA DE CREACIÓN DE LA VENTA, NO LA ACTUAL
+            $fechaCreacion = Carbon::parse($venta->created_at)->setTimezone('America/Lima');
+            $fechaViaje = $venta->fecha_viaje 
+                ? Carbon::parse($venta->fecha_viaje)->setTimezone('America/Lima')
+                : $fechaCreacion;
+
+            // Preparar datos para el ticket - USANDO FECHA/HORA DE LA VENTA
             $datosTicket = [
                 // Información de la empresa
                 'empresa' => 'ROCÍO TRAVEL',
@@ -408,10 +450,10 @@ class HistorialVentaController extends Controller
                 'contacto' => '+51901978379',
                 'yape' => '989667653',
                 
-                // Datos del ticket
-                'numero_ticket' => $venta->generarNumeroTicket(),
-                'fecha_emision' => Carbon::now()->format('d/m/Y'),
-                'hora_emision' => Carbon::now()->format('H:i:s'),
+                // Datos del ticket - USAR FECHA/HORA DE CREACIÓN
+                'numero_ticket' => $venta->numero_ticket ?? $venta->generarNumeroTicket(),
+                'fecha_emision' => $fechaCreacion->format('d/m/Y'),
+                'hora_emision' => $fechaCreacion->format('h:i A'),
                 
                 // Datos del cliente
                 'cliente' => [
@@ -426,30 +468,35 @@ class HistorialVentaController extends Controller
                 'descripcion' => $venta->descripcion,
                 'precio_unitario' => number_format($venta->precio_unitario, 2),
                 'subtotal' => number_format($venta->subtotal, 2),
-                'total' => number_format($venta->total, 2),
+                'total' => number_format($venta->total ?? $venta->subtotal, 2),
                 
                 // Datos del viaje
-                'fecha_viaje' => $venta->created_at->format('d/m/Y'),
+                'fecha_viaje' => $fechaViaje->format('d/m/Y'),
                 'embarcacion' => $venta->embarcacion,
                 'puerto_embarque' => $venta->puerto_embarque,
                 'hora_embarque' => $venta->hora_embarque,
                 'hora_salida' => $venta->hora_salida,
                 'destino' => $venta->destino ?? $venta->descripcion,
-                'medio_pago' => strtoupper($venta->medio_pago),
+                'ruta' => $venta->ruta ?? '',
+                'medio_pago' => $this->formatearMedioPago($venta->medio_pago),
+                'detalles_pago' => $venta->detalles_pago ?? '',
                 'nota' => $venta->nota ?? '',
                 
-                // Información adicional
-                'fecha_impresion' => Carbon::now()->format('d/m/Y H:i:s'),
+                // Información adicional - USAR FECHA/HORA DE CREACIÓN
+                'fecha_impresion' => $fechaCreacion->format('d/m/Y h:i A'),
                 'operador' => 'ROCÍO TRAVEL',
-                'estado' => $venta->estado_formateado
+                'estado' => $this->formatearEstado($venta->estado)
             ];
 
             // Generar HTML para el ticket
-            $html = view('ticket.historial-venta', $datosTicket)->render();
+            $html = view('ticket.ticket-venta', $datosTicket)->render();
             
-            Log::info('Ticket generado para venta del historial', [
+            Log::info('Ticket generado para venta', [
                 'venta_id' => $venta->id,
-                'numero_ticket' => $datosTicket['numero_ticket']
+                'numero_ticket' => $datosTicket['numero_ticket'],
+                'fecha_original_venta' => $venta->created_at,
+                'fecha_emision_ticket' => $datosTicket['fecha_emision'],
+                'hora_emision_ticket' => $datosTicket['hora_emision']
             ]);
             
             return response($html)->header('Content-Type', 'text/html');
@@ -462,6 +509,143 @@ class HistorialVentaController extends Controller
                 'message' => 'Error al generar el ticket: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Generar PDF del ticket - CORREGIDO: usa hora de creación
+     */
+    public function generarTicketPdf($id)
+    {
+        try {
+            $venta = HistorialVenta::find($id);
+
+            if (!$venta) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Venta no encontrada'
+                ], 404);
+            }
+
+            if ($venta->estaAnulada()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede generar ticket de una venta anulada'
+                ], 400);
+            }
+
+            // USAR LA FECHA/HORA DE CREACIÓN DE LA VENTA
+            $fechaCreacion = Carbon::parse($venta->created_at)->setTimezone('America/Lima');
+            $fechaViaje = $venta->fecha_viaje 
+                ? Carbon::parse($venta->fecha_viaje)->setTimezone('America/Lima')
+                : $fechaCreacion;
+
+            // Preparar datos para el ticket - USANDO FECHA/HORA DE LA VENTA
+            $datosTicket = [
+                // Información de la empresa
+                'empresa' => 'ROCÍO TRAVEL',
+                'direccion' => 'Calle. Pevas N° 366 - IQUITOS',
+                'contacto' => '+51901978379',
+                'yape' => '989667653',
+                
+                // Datos del ticket - USAR FECHA/HORA DE CREACIÓN
+                'numero_ticket' => $venta->numero_ticket ?? $venta->generarNumeroTicket(),
+                'fecha_emision' => $fechaCreacion->format('d/m/Y'),
+                'hora_emision' => $fechaCreacion->format('h:i A'),
+                
+                // Datos del cliente
+                'cliente' => [
+                    'nombre' => $venta->nombre_cliente,
+                    'documento' => $venta->documento_cliente,
+                    'contacto' => $venta->contacto_cliente ?? '',
+                    'nacionalidad' => $venta->nacionalidad_cliente ?? 'PERUANA'
+                ],
+                
+                // Datos del pasaje
+                'cantidad' => $venta->cantidad,
+                'descripcion' => $venta->descripcion,
+                'precio_unitario' => number_format($venta->precio_unitario, 2),
+                'subtotal' => number_format($venta->subtotal, 2),
+                'total' => number_format($venta->total ?? $venta->subtotal, 2),
+                
+                // Datos del viaje
+                'fecha_viaje' => $fechaViaje->format('d/m/Y'),
+                'embarcacion' => $venta->embarcacion,
+                'puerto_embarque' => $venta->puerto_embarque,
+                'hora_embarque' => $venta->hora_embarque,
+                'hora_salida' => $venta->hora_salida,
+                'destino' => $venta->destino ?? $venta->descripcion,
+                'ruta' => $venta->ruta ?? '',
+                'medio_pago' => $this->formatearMedioPago($venta->medio_pago),
+                'detalles_pago' => $venta->detalles_pago ?? '',
+                'nota' => $venta->nota ?? '',
+                
+                // Información adicional - USAR FECHA/HORA DE CREACIÓN
+                'fecha_impresion' => $fechaCreacion->format('d/m/Y h:i A'),
+                'operador' => 'ROCÍO TRAVEL',
+                'estado' => $this->formatearEstado($venta->estado)
+            ];
+
+            // Generar PDF
+            $pdf = PDF::loadView('ticket.ticket-venta', $datosTicket)
+                     ->setPaper([0, 0, 226.77, 700], 'portrait')
+                     ->setOptions([
+                         'dpi' => 150,
+                         'defaultFont' => 'sans-serif',
+                         'isHtml5ParserEnabled' => true,
+                         'isRemoteEnabled' => true
+                     ]);
+
+            $nombreArchivo = 'ticket-venta-' . $venta->id . '.pdf';
+
+            Log::info('PDF de ticket generado', [
+                'venta_id' => $venta->id,
+                'fecha_original' => $venta->created_at,
+                'fecha_ticket' => $datosTicket['fecha_emision'],
+                'hora_ticket' => $datosTicket['hora_emision']
+            ]);
+
+            return $pdf->download($nombreArchivo);
+
+        } catch (\Exception $e) {
+            Log::error('Error en HistorialVentaController@generarTicketPdf: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el PDF del ticket: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Formatear medio de pago para mostrar en el ticket
+     */
+    private function formatearMedioPago($medioPago)
+    {
+        $formatos = [
+            'efectivo' => 'EFECTIVO',
+            'yape' => 'YAPE',
+            'plin' => 'PLIN',
+            'transferencia' => 'TRANSFERENCIA',
+            'tarjeta' => 'TARJETA',
+            'mixto' => 'PAGO MIXTO'
+        ];
+        
+        return $formatos[$medioPago] ?? strtoupper($medioPago);
+    }
+
+    /**
+     * Formatear estado para mostrar en el ticket
+     */
+    private function formatearEstado($estado)
+    {
+        $formatos = [
+            'activo' => 'ACTIVO',
+            'completado' => 'COMPLETADO',
+            'anulado' => 'ANULADO',
+            'pendiente' => 'PENDIENTE'
+        ];
+        
+        return $formatos[$estado] ?? strtoupper($estado);
     }
 
     /**

@@ -111,46 +111,26 @@ Route::prefix('pasajes')->group(function () {
     
     // NUEVA RUTA PARA GENERAR IMAGEN JPG
     Route::post('/generar-imagen-tiempo-real', [PasajeController::class, 'generarImagenTiempoReal']);
+    
+    // ========== NUEVA RUTA PARA GUARDAR TICKET ==========
+    Route::post('/guardar-ticket', [PasajeController::class, 'guardarTicket']);
 });
 
 // ========== RUTAS HISTORIAL DE VENTAS - SISTEMA PRINCIPAL ==========
-Route::prefix('historial-ventas')->group(function () {
-    
-    // Ruta principal - Obtener todo el historial
-    Route::get('/', [HistorialVentaController::class, 'index']);
-    
-    // Búsqueda con filtros específicos
-    Route::get('/buscar', [HistorialVentaController::class, 'buscar']);
-    
-    // Estadísticas y reportes
-    Route::get('/estadisticas', [HistorialVentaController::class, 'estadisticas']);
-    Route::get('/resumen', [HistorialVentaController::class, 'resumen']);
-    
-    // Exportar a Excel
-    Route::post('/exportar-excel', [HistorialVentaController::class, 'exportarExcel']);
-    
-    // Crear nueva venta en el historial (opcional)
-    Route::post('/', [HistorialVentaController::class, 'store']);
-    
-    // Rutas específicas para una venta por ID
-    Route::prefix('{id}')->group(function () {
-        
-        // Mostrar venta específica
-        Route::get('/', [HistorialVentaController::class, 'show']);
-        
-        // Anular venta
-        Route::put('/anular', [HistorialVentaController::class, 'anular']);
-        
-        // Completar venta
-        Route::put('/completar', [HistorialVentaController::class, 'completar']);
-        
-        // Generar ticket de impresión
-        Route::post('/generar-ticket', [HistorialVentaController::class, 'generarTicket']);
-        
-    });
-});
+// Historial de Ventas
+Route::get('/historial-ventas', [HistorialVentaController::class, 'index']);
+Route::get('/historial-ventas/buscar', [HistorialVentaController::class, 'buscar']);
+Route::post('/historial-ventas', [HistorialVentaController::class, 'store']);
+Route::get('/historial-ventas/{id}', [HistorialVentaController::class, 'show']);
+Route::put('/historial-ventas/{id}/anular', [HistorialVentaController::class, 'anular']);
+Route::get('/historial-ventas/{id}/ticket', [HistorialVentaController::class, 'generarTicket']);
+Route::get('/historial-ventas/{id}/ticket-pdf', [HistorialVentaController::class, 'generarTicketPdf']);
+Route::post('/historial-ventas/exportar-excel', [HistorialVentaController::class, 'exportarExcel']);
+Route::get('/historial-ventas/estadisticas', [HistorialVentaController::class, 'estadisticas']);
+Route::put('/historial-ventas/{id}/completar', [HistorialVentaController::class, 'completar']);
+Route::get('/historial-ventas/resumen', [HistorialVentaController::class, 'resumen']);
 
-// ========== NUEVA RUTA PARA GUARDAR TICKET DESDE EL NAVEGADOR ==========
+// ========== RUTA ALTERNATIVA PARA GUARDAR TICKET DESDE EL NAVEGADOR ==========
 Route::post('/guardar-ticket', [HistorialVentaController::class, 'guardarTicketDesdeNavegador']);
 
 // ========== RUTAS DE TESTING ==========
@@ -369,6 +349,8 @@ Route::get('/test-historial-ventas', function () {
                 'GET /api/historial-ventas/buscar' => 'Buscar ventas con filtros',
                 'PUT /api/historial-ventas/{id}/anular' => 'Anular venta',
                 'POST /api/historial-ventas/{id}/generar-ticket' => 'Generar ticket',
+                'GET /api/historial-ventas/{id}/visualizar-ticket' => 'Visualizar ticket guardado',
+                'POST /api/pasajes/guardar-ticket' => 'Guardar ticket desde pasajes',
                 'POST /api/guardar-ticket' => 'Guardar ticket desde navegador'
             ],
             'timestamp' => now()
@@ -422,16 +404,20 @@ Route::get('/health', function () {
                 'GET /api/detalle-pasajes' => 'Detalles de pasajes',
                 'GET /api/pasajes' => 'Gestión de pasajes',
                 'POST /api/pasajes/generar-imagen-tiempo-real' => 'Generar imagen JPG',
+                'POST /api/pasajes/guardar-ticket' => 'Guardar ticket desde pasajes',
                 'GET /api/historial-ventas' => 'Historial de ventas',
                 'GET /api/historial-ventas/buscar' => 'Búsqueda de ventas',
                 'POST /api/historial-ventas' => 'Crear nueva venta',
                 'PUT /api/historial-ventas/{id}/anular' => 'Anular venta',
+                'GET /api/historial-ventas/{id}/visualizar-ticket' => 'Visualizar ticket guardado',
                 'POST /api/guardar-ticket' => 'Guardar ticket desde navegador'
             ],
             'nuevas_funcionalidades' => [
                 'Embarcaciones auto-llenado' => 'GET /api/embarcaciones',
                 'Puertos auto-llenado' => 'GET /api/puertos-embarque',
-                'Generar imagen JPG' => 'POST /api/pasajes/generar-imagen-tiempo-real'
+                'Generar imagen JPG' => 'POST /api/pasajes/generar-imagen-tiempo-real',
+                'Guardar ticket desde pasajes' => 'POST /api/pasajes/guardar-ticket',
+                'Visualizar ticket guardado' => 'GET /api/historial-ventas/{id}/visualizar-ticket'
             ],
             'timestamp' => now()
         ]);
