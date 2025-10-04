@@ -4,14 +4,12 @@
     <div class="header">
       <div class="header-top">
         <h2>Agregar Detalle de Pasaje</h2>
-        <!-- Botón para abrir modal -->
         <button class="modal-button" @click="abrirModal">
           <i class="fas fa-edit"></i>
           Agregar/Actualizar
         </button>
       </div>
       
-      <!-- Mostrar datos del cliente actual -->
       <div v-if="clienteActual" class="cliente-info">
         <div class="cliente-card">
           <i class="fas fa-user"></i>
@@ -25,7 +23,6 @@
 
     <!-- Formulario principal -->
     <div class="search-form">
-      <!-- Origen y Destino de Ruta -->
       <div class="route-section">
         <div class="input-group origen-group">
           <label for="origen">Destino</label>
@@ -41,6 +38,9 @@
             <option value="YURIMAGUAS">YURIMAGUAS</option>
             <option value="FRONTERA">FRONTERA</option>
             <option value="OTROS">OTROS</option>
+            <option v-for="destino in destinosGuardados" :key="destino" :value="destino">
+              {{ destino }}
+            </option>
           </select>
           <input 
             v-else
@@ -76,7 +76,9 @@
           >
             <option value="">Seleccionar destino</option>
             <option value="NAUTA-ALFONSO UGARTE">NAUTA-ALFONSO UGARTE</option>
-            
+            <option v-for="ruta in rutasGuardadas" :key="ruta" :value="ruta">
+              {{ ruta }}
+            </option>
           </select>
           <input 
             v-else
@@ -98,7 +100,6 @@
         </div>
       </div>
 
-      <!-- Cantidad fija -->
       <div class="cantidad-section">
         <div class="cantidad-group">
           <label>Cantidad</label>
@@ -108,7 +109,6 @@
         </div>
       </div>
 
-      <!-- Precio -->
       <div class="price-section">
         <div class="price-group">
           <label for="precio">Precio Unitario</label>
@@ -128,14 +128,12 @@
         </div>
       </div>
 
-      <!-- Botón de agregar -->
       <button class="add-button" @click="agregarPasaje" :disabled="cargandoAgregar">
         <i class="fas fa-plus" v-if="!cargandoAgregar"></i>
         <i class="fas fa-spinner fa-spin" v-if="cargandoAgregar"></i>
         {{ cargandoAgregar ? 'Agregando...' : 'Agregar' }}
       </button>
 
-      <!-- DEBUG: Mostrar datos que se están enviando -->
       <div v-if="formData.descripcion && formData.precioUnitario" class="debug-info">
         <h4>Datos que se enviarán:</h4>
         <p><strong>Cantidad:</strong> {{ formData.cantidad }}</p>
@@ -162,7 +160,6 @@
         </div>
         
         <div class="modal-body">
-          <!-- Sección Ruta -->
           <div class="modal-section">
             <h4 class="section-title">
               <i class="fas fa-route"></i>
@@ -200,7 +197,6 @@
             </div>
           </div>
 
-          <!-- SECCIÓN OPCIONAL: Embarcación y Puerto -->
           <div class="modal-section">
             <h4 class="section-title">
               <i class="fas fa-ship"></i>
@@ -235,6 +231,60 @@
               </div>
             </div>
           </div>
+
+          <!-- SECCIÓN NUEVA: Elementos Guardados -->
+          <div class="modal-section" v-if="destinosGuardados.length > 0 || rutasGuardadas.length > 0 || embarcacionesGuardadas.length > 0 || puertosGuardados.length > 0">
+            <h4 class="section-title">
+              <i class="fas fa-database"></i>
+              Elementos Guardados
+            </h4>
+            <p class="section-description">
+              <i class="fas fa-trash-alt"></i>
+              Haz clic en la X para eliminar un elemento guardado
+            </p>
+            
+            <div class="saved-items-grid">
+              <div class="saved-item-category" v-if="destinosGuardados.length > 0">
+                <h5>Destinos ({{ destinosGuardados.length }})</h5>
+                <div class="saved-items-list">
+                  <span v-for="destino in destinosGuardados" :key="destino" class="saved-item-tag">
+                    {{ destino }}
+                    <i class="fas fa-times eliminar-item" @click="eliminarDestino(destino)" title="Eliminar"></i>
+                  </span>
+                </div>
+              </div>
+
+              <div class="saved-item-category" v-if="rutasGuardadas.length > 0">
+                <h5>Rutas ({{ rutasGuardadas.length }})</h5>
+                <div class="saved-items-list">
+                  <span v-for="ruta in rutasGuardadas" :key="ruta" class="saved-item-tag">
+                    {{ ruta }}
+                    <i class="fas fa-times eliminar-item" @click="eliminarRuta(ruta)" title="Eliminar"></i>
+                  </span>
+                </div>
+              </div>
+
+              <div class="saved-item-category" v-if="embarcacionesGuardadas.length > 0">
+                <h5>Embarcaciones ({{ embarcacionesGuardadas.length }})</h5>
+                <div class="saved-items-list">
+                  <span v-for="embarcacion in embarcacionesGuardadas" :key="embarcacion" class="saved-item-tag">
+                    {{ embarcacion }}
+                    <i class="fas fa-times eliminar-item" @click="eliminarEmbarcacion(embarcacion)" title="Eliminar"></i>
+                  </span>
+                </div>
+              </div>
+
+              <div class="saved-item-category" v-if="puertosGuardados.length > 0">
+                <h5>Puertos ({{ puertosGuardados.length }})</h5>
+                <div class="saved-items-list">
+                  <span v-for="puerto in puertosGuardados" :key="puerto" class="saved-item-tag">
+                    {{ puerto }}
+                    <i class="fas fa-times eliminar-item" @click="eliminarPuerto(puerto)" title="Eliminar"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div class="modal-footer">
@@ -250,13 +300,11 @@
       </div>
     </div>
 
-    <!-- Mensaje de validación -->
     <div v-if="mensajeError" class="error-message">
       <i class="fas fa-exclamation-circle"></i>
       {{ mensajeError }}
     </div>
 
-    <!-- Mensaje de éxito -->
     <div v-if="mensajeExito" class="success-message">
       <i class="fas fa-check-circle"></i>
       {{ mensajeExito }}
@@ -274,10 +322,13 @@ export default {
       clienteActual: null,
       mostrarModal: false,
       cargandoAgregar: false,
-      
-      // Nuevas variables para modo manual
       modoManualOrigen: false,
       modoManualRuta: false,
+      
+      destinosGuardados: [],
+      rutasGuardadas: [],
+      embarcacionesGuardadas: [],
+      puertosGuardados: [],
       
       formData: {
         origen: '',
@@ -307,6 +358,7 @@ export default {
   
   mounted() {
     this.cargarDatosCliente()
+    this.cargarDatosGuardados()
   },
   
   methods: {
@@ -315,36 +367,56 @@ export default {
       if (datosCliente) {
         try {
           this.clienteActual = JSON.parse(datosCliente)
-          console.log('✅ Datos del cliente cargados:', this.clienteActual)
         } catch (error) {
-          console.error('❌ Error al cargar datos del cliente:', error)
           this.clienteActual = null
         }
-      } else {
-        console.log('⚠️ No se encontraron datos del cliente en sessionStorage')
       }
     },
 
-    // Métodos del Modal MEJORADOS
+    cargarDatosGuardados() {
+      const destinos = localStorage.getItem('destinosPersonalizados')
+      if (destinos) {
+        this.destinosGuardados = JSON.parse(destinos)
+      }
+      
+      const rutas = localStorage.getItem('rutasPersonalizadas')
+      if (rutas) {
+        this.rutasGuardadas = JSON.parse(rutas)
+      }
+      
+      const embarcaciones = localStorage.getItem('embarcacionesPersonalizadas')
+      if (embarcaciones) {
+        this.embarcacionesGuardadas = JSON.parse(embarcaciones)
+      }
+      
+      const puertos = localStorage.getItem('puertosPersonalizados')
+      if (puertos) {
+        this.puertosGuardados = JSON.parse(puertos)
+      }
+    },
+
+    guardarEnLocalStorage(clave, valor) {
+      let datos = JSON.parse(localStorage.getItem(clave) || '[]')
+      const valorUpper = valor.toUpperCase()
+      
+      if (!datos.includes(valorUpper)) {
+        datos.push(valorUpper)
+        localStorage.setItem(clave, JSON.stringify(datos))
+      }
+      
+      return valorUpper
+    },
+
     abrirModal() {
-      // Cargar datos actuales en el modal
       this.modalData.origen = this.formData.origen
       this.modalData.destinoRuta = this.formData.destinoRuta
       this.modalData.embarcacion = this.formData.embarcacion
       this.modalData.puertoEmbarque = this.formData.puertoEmbarque
-      
       this.mostrarModal = true
     },
 
     cerrarModal() {
       this.mostrarModal = false
-      // Limpiar datos del modal
-      this.modalData = {
-        origen: '',
-        destinoRuta: '',
-        embarcacion: '',
-        puertoEmbarque: ''
-      }
     },
 
     intercambiarRutasModal() {
@@ -356,57 +428,73 @@ export default {
     },
 
     guardarCambiosModal() {
-      // Validar solo los campos obligatorios de ruta
-      if (!this.modalData.origen || !this.modalData.destinoRuta) {
-        this.mensajeError = 'Por favor complete el detalle y la ruta'
+      // Validar que al menos haya ingresado algo
+      if (!this.modalData.origen && !this.modalData.destinoRuta && !this.modalData.embarcacion && !this.modalData.puertoEmbarque) {
+        this.mensajeError = 'Por favor complete al menos un campo'
         setTimeout(() => { this.mensajeError = '' }, 3000)
         return
       }
       
-      // Detectar si son valores personalizados (no están en las opciones predefinidas)
       const opcionesOrigen = ['PUCALLPA', 'YURIMAGUAS', 'FRONTERA', 'OTROS']
-      const opcionesRuta = ['PUCALLPA', 'REQUENA', 'YURIMAGUAS', 'SAN LORENZO', 'SANTA ROSA', 'TROMPETERO', 'INTUTO']
+      const opcionesRuta = ['NAUTA-ALFONSO UGARTE']
       
-      this.modoManualOrigen = !opcionesOrigen.includes(this.modalData.origen.toUpperCase())
-      this.modoManualRuta = !opcionesRuta.includes(this.modalData.destinoRuta.toUpperCase())
+      // Guardar ORIGEN solo si fue ingresado
+      if (this.modalData.origen && this.modalData.origen.trim() !== '') {
+        const origenUpper = this.modalData.origen.toUpperCase()
+        
+        if (!opcionesOrigen.includes(origenUpper)) {
+          this.guardarEnLocalStorage('destinosPersonalizados', origenUpper)
+          this.modoManualOrigen = true
+          this.cargarDatosGuardados()
+        } else {
+          this.modoManualOrigen = false
+        }
+        
+        this.formData.origen = origenUpper
+      }
       
-      // Actualizar TODOS los campos del formulario principal
-      this.formData.origen = this.modalData.origen
-      this.formData.destinoRuta = this.modalData.destinoRuta
-      this.formData.embarcacion = this.modalData.embarcacion || '' // Opcional
-      this.formData.puertoEmbarque = this.modalData.puertoEmbarque || '' // Opcional
+      // Guardar RUTA solo si fue ingresada
+      if (this.modalData.destinoRuta && this.modalData.destinoRuta.trim() !== '') {
+        const rutaUpper = this.modalData.destinoRuta.toUpperCase()
+        
+        if (!opcionesRuta.includes(rutaUpper)) {
+          this.guardarEnLocalStorage('rutasPersonalizadas', rutaUpper)
+          this.modoManualRuta = true
+          this.cargarDatosGuardados()
+        } else {
+          this.modoManualRuta = false
+        }
+        
+        this.formData.destinoRuta = rutaUpper
+      }
       
-      // Actualizar descripción automáticamente
-      this.actualizarDescripcion()
-      
-      // Guardar nuevos valores en sessionStorage para que se mantengan en listas
+      // Guardar EMBARCACIÓN solo si fue ingresada
       if (this.modalData.embarcacion && this.modalData.embarcacion.trim() !== '') {
-        sessionStorage.setItem('nuevaEmbarcacionAgregada', this.modalData.embarcacion)
+        this.guardarEnLocalStorage('embarcacionesPersonalizadas', this.modalData.embarcacion)
+        this.formData.embarcacion = this.modalData.embarcacion.toUpperCase()
+        this.cargarDatosGuardados()
       }
       
+      // Guardar PUERTO solo si fue ingresado
       if (this.modalData.puertoEmbarque && this.modalData.puertoEmbarque.trim() !== '') {
-        sessionStorage.setItem('nuevoPuertoAgregado', this.modalData.puertoEmbarque)
+        this.guardarEnLocalStorage('puertosPersonalizados', this.modalData.puertoEmbarque)
+        this.formData.puertoEmbarque = this.modalData.puertoEmbarque.toUpperCase()
+        this.cargarDatosGuardados()
       }
       
-      // Mostrar mensaje de éxito
-      let mensaje = 'Datos actualizados correctamente'
-      if (this.modoManualOrigen || this.modoManualRuta) {
-        mensaje += '. Valores personalizados detectados - se muestran como texto'
-      }
-      if (this.modalData.embarcacion || this.modalData.puertoEmbarque) {
-        mensaje += '. Detalles del viaje guardados'
+      // Actualizar descripción solo si hay origen Y destino
+      if (this.formData.origen && this.formData.destinoRuta) {
+        this.actualizarDescripcion()
       }
       
-      this.mensajeExito = mensaje
+      this.mensajeExito = '¡Datos guardados correctamente!'
       setTimeout(() => {
         this.mensajeExito = ''
       }, 3000)
       
-      // Cerrar modal
       this.cerrarModal()
     },
 
-    // Nuevos métodos para volver a selects
     volverASelectOrigen() {
       this.modoManualOrigen = false
       this.formData.origen = ''
@@ -448,9 +536,6 @@ export default {
           puerto_embarque: this.formData.puertoEmbarque || ''
         }
         
-        console.log('🚀 Enviando datos en tiempo real:', datosActualizados)
-        
-        // Guardar para DetallesPasajeView
         sessionStorage.setItem('datosPasajeActuales', JSON.stringify(datosActualizados))
         sessionStorage.setItem('datosPasajeNavegacion', JSON.stringify(datosActualizados))
         
@@ -460,15 +545,19 @@ export default {
       }
     },
     
-    // VALIDACIÓN SIMPLIFICADA - Solo campos esenciales
     validarFormulario() {
+      if (!this.formData.origen && !this.formData.destinoRuta) {
+        this.mensajeError = 'Por favor complete el destino y la ruta desde "Agregar/Actualizar"'
+        return false
+      }
+      
       if (!this.formData.origen) {
-        this.mensajeError = 'Por favor seleccione un destino'
+        this.mensajeError = 'Por favor complete el destino desde "Agregar/Actualizar"'
         return false
       }
       
       if (!this.formData.destinoRuta) {
-        this.mensajeError = 'Por favor seleccione una ruta'
+        this.mensajeError = 'Por favor complete la ruta desde "Agregar/Actualizar"'
         return false
       }
       
@@ -489,24 +578,20 @@ export default {
       this.cargandoAgregar = true
       
       try {
-        // Crear el objeto de datos para agregar
         const datosPasaje = {
-          id: Date.now(), // ID único temporal
+          id: Date.now(),
           destino: this.determinarDestinoCategoria(this.formData.destinoRuta),
           ruta: this.formData.descripcion,
           descripcion: this.formData.descripcion,
           cantidad: parseInt(this.formData.cantidad),
           precio_unitario: parseFloat(this.formData.precioUnitario),
           subtotal: this.precioTotal,
-          embarcacion: this.formData.embarcacion || '', // Campo opcional
-          puerto_embarque: this.formData.puertoEmbarque || '', // Campo opcional
+          embarcacion: this.formData.embarcacion || '',
+          puerto_embarque: this.formData.puertoEmbarque || '',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
         
-        console.log('📤 Agregando pasaje a la tabla detalles_pasaje:', datosPasaje)
-        
-        // 1. Obtener datos existentes de la tabla detalles_pasaje
         let datosExistentes = []
         const datosGuardados = sessionStorage.getItem('rociotravel.detalles_pasaje')
         if (datosGuardados) {
@@ -516,41 +601,31 @@ export default {
               datosExistentes = []
             }
           } catch (error) {
-            console.error('Error al parsear datos existentes:', error)
             datosExistentes = []
           }
         }
         
-        // 2. Agregar el nuevo pasaje al array
         datosExistentes.push(datosPasaje)
         
-        // 3. Guardar de vuelta en sessionStorage
         sessionStorage.setItem('rociotravel.detalles_pasaje', JSON.stringify(datosExistentes))
-        
-        // 4. También guardar en el formato que usa tu aplicación
         sessionStorage.setItem('datosTablaDetalles', JSON.stringify(datosExistentes))
         sessionStorage.setItem('datosPasajeNavegacion', JSON.stringify(datosPasaje))
         
-        // 5. Emitir evento para notificar a otros componentes
         if (this.$root) {
           this.$root.$emit('pasaje-agregado', datosPasaje)
           this.$root.$emit('tabla-actualizada', datosExistentes)
         }
         
-        // 6. Mostrar mensaje de éxito
         this.mensajeExito = '¡Pasaje agregado correctamente! Redirigiendo...'
         
-        // 7. Limpiar solo el precio (mantener la configuración del modal)
         this.formData.precioUnitario = ''
         this.mensajeError = ''
         
-        // 8. Redirigir a la vista de detalles del pasaje después de un breve retraso
         setTimeout(() => {
           this.irADetallesDelPasaje(datosPasaje)
         }, 1500)
         
       } catch (error) {
-        console.error('❌ Error al agregar pasaje:', error)
         this.mensajeError = 'Error al agregar el pasaje. Intenta nuevamente.'
         setTimeout(() => {
           this.mensajeError = ''
@@ -574,11 +649,10 @@ export default {
     },
     
     irADetallesDelPasaje(datos) {
-      // Opción 1: Si usas router con nombre de ruta
       if (this.$router) {
         try {
           this.$router.push({
-            name: 'detalles-pasaje', // Ajusta el nombre según tu ruta
+            name: 'detalles-pasaje',
             query: {
               id: datos.id,
               cantidad: datos.cantidad.toString(),
@@ -589,41 +663,72 @@ export default {
               ruta: datos.ruta,
               embarcacion: datos.embarcacion,
               puerto_embarque: datos.puerto_embarque,
-              agregado: 'true' // Flag para indicar que fue recién agregado
+              agregado: 'true'
             }
           })
         } catch (error) {
-          console.error('Error al navegar con router:', error)
-          // Opción 2: Si falla el router, usar navegación manual
           this.navegacionManual()
         }
       } else {
-        // Opción 3: Navegación manual si no hay router
         this.navegacionManual()
       }
     },
     
     navegacionManual() {
-      // Si no funciona el router, redirigir manualmente
-      // Ajusta la URL según tu aplicación
-      const urlDestino = '/detalles-pasaje' // o la URL que corresponda
+      const urlDestino = '/detalles-pasaje'
       window.location.href = urlDestino
     },
-    
-    limpiarFormulario() {
-      this.formData = {
-        origen: '',
-        destinoRuta: '',
-        cantidad: 1,
-        precioUnitario: '',
-        descripcion: '',
-        embarcacion: '',
-        puertoEmbarque: ''
+
+    eliminarDestino(destino) {
+      if (confirm(`¿Estás seguro de eliminar "${destino}"?`)) {
+        this.destinosGuardados = this.destinosGuardados.filter(d => d !== destino)
+        localStorage.setItem('destinosPersonalizados', JSON.stringify(this.destinosGuardados))
+        
+        // Disparar evento para sincronizar con otros componentes
+        window.dispatchEvent(new Event('elementosActualizados'))
+        
+        this.mensajeExito = 'Destino eliminado correctamente'
+        setTimeout(() => { this.mensajeExito = '' }, 2000)
       }
-      this.mensajeError = ''
-      
-      // No limpiar los datos de la tabla, solo los temporales del formulario
-      sessionStorage.removeItem('datosPasajeActuales')
+    },
+
+    eliminarRuta(ruta) {
+      if (confirm(`¿Estás seguro de eliminar "${ruta}"?`)) {
+        this.rutasGuardadas = this.rutasGuardadas.filter(r => r !== ruta)
+        localStorage.setItem('rutasPersonalizadas', JSON.stringify(this.rutasGuardadas))
+        
+        // Disparar evento para sincronizar con otros componentes
+        window.dispatchEvent(new Event('elementosActualizados'))
+        
+        this.mensajeExito = 'Ruta eliminada correctamente'
+        setTimeout(() => { this.mensajeExito = '' }, 2000)
+      }
+    },
+
+    eliminarEmbarcacion(embarcacion) {
+      if (confirm(`¿Estás seguro de eliminar "${embarcacion}"?`)) {
+        this.embarcacionesGuardadas = this.embarcacionesGuardadas.filter(e => e !== embarcacion)
+        localStorage.setItem('embarcacionesPersonalizadas', JSON.stringify(this.embarcacionesGuardadas))
+        
+        // Disparar evento para sincronizar con otros componentes
+        window.dispatchEvent(new Event('elementosActualizados'))
+        
+        this.mensajeExito = 'Embarcación eliminada correctamente'
+        setTimeout(() => { this.mensajeExito = '' }, 2000)
+      }
+    },
+
+    eliminarPuerto(puerto) {
+      if (confirm(`¿Estás seguro de eliminar "${puerto}"?`)) {
+        this.puertosGuardados = this.puertosGuardados.filter(p => p !== puerto)
+        localStorage.setItem('puertosPersonalizados', JSON.stringify(this.puertosGuardados))
+        
+        // Disparar evento para sincronizar con otros componentes
+        window.dispatchEvent(new Event('elementosActualizados'))
+        
+        this.mensajeExito = 'Puerto eliminado correctamente'
+        setTimeout(() => { this.mensajeExito = '' }, 2000)
+      }
     }
   }
 }
@@ -659,7 +764,6 @@ export default {
   flex: 1;
 }
 
-/* Botón Modal */
 .modal-button {
   padding: 12px 20px;
   background: linear-gradient(135deg, #28a745, #20c997);
@@ -761,7 +865,6 @@ export default {
   background: white;
 }
 
-/* Campos de solo lectura y manuales */
 .manual-input {
   background: #fff3cd !important;
   border-color: #ffc107 !important;
@@ -942,7 +1045,6 @@ export default {
   transform: none;
 }
 
-/* Estilos del Modal MEJORADOS */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1168,6 +1270,75 @@ export default {
   transform: translateY(-2px);
 }
 
+.saved-items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.saved-item-category {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #e9ecef;
+}
+
+.saved-item-category h5 {
+  margin: 0 0 10px 0;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.saved-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.saved-item-tag {
+  background: #e9ecef;
+  color: #495057;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.saved-item-tag:hover {
+  background: #dee2e6;
+}
+
+.eliminar-item {
+  cursor: pointer;
+  color: #dc3545;
+  font-size: 12px;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.eliminar-item:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: scale(1.2);
+}
+
 .debug-info {
   margin-top: 20px;
   padding: 15px;
@@ -1227,7 +1398,6 @@ export default {
   border: 2px solid #c6f6d5;
 }
 
-/* Animación del spinner */
 .fa-spin {
   animation: fa-spin 2s infinite linear;
 }
@@ -1298,6 +1468,11 @@ export default {
   }
 
   .modal-details-section {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .saved-items-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }

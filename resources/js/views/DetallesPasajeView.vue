@@ -64,22 +64,102 @@
         <div class="form-column">
           <div class="form-group">
             <label for="embarcacion">Embarcación:</label>
-            <select id="embarcacion" v-model="datosViaje.embarcacion" class="form-select" @change="validarImagen">
-              <option value="">Seleccionar embarcación</option>
-              <option v-for="embarcacion in embarcaciones" :key="embarcacion" :value="embarcacion">
-                {{ embarcacion }}
-              </option>
-            </select>
+            <div class="input-with-edit">
+              <select 
+                v-if="!modoEditarEmbarcacion"
+                id="embarcacion" 
+                v-model="datosViaje.embarcacion" 
+                class="form-select" 
+                @change="validarImagen"
+              >
+                <option value="">Seleccionar embarcación</option>
+                <option v-for="embarcacion in embarcaciones" :key="embarcacion" :value="embarcacion">
+                  {{ embarcacion }}
+                </option>
+              </select>
+              <input 
+                v-else
+                type="text" 
+                v-model="embarcacionEditando"
+                class="form-input edit-input"
+                placeholder="Editar embarcación"
+                @keyup.enter="guardarEdicionEmbarcacion"
+              />
+              <button 
+                v-if="datosViaje.embarcacion && !modoEditarEmbarcacion" 
+                @click="activarEdicionEmbarcacion"
+                class="btn-edit-inline"
+                title="Editar embarcación"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button 
+                v-if="modoEditarEmbarcacion" 
+                @click="guardarEdicionEmbarcacion"
+                class="btn-save-inline"
+                title="Guardar cambios"
+              >
+                <i class="fas fa-check"></i>
+              </button>
+              <button 
+                v-if="modoEditarEmbarcacion" 
+                @click="cancelarEdicionEmbarcacion"
+                class="btn-cancel-inline"
+                title="Cancelar"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
             <label for="puertoEmbarque">Puerto de embarque:</label>
-            <select id="puertoEmbarque" v-model="datosViaje.puertoEmbarque" class="form-select" @change="validarImagen">
-              <option value="">Seleccionar puerto</option>
-              <option v-for="puerto in puertosEmbarque" :key="puerto" :value="puerto">
-                {{ puerto }}
-              </option>
-            </select>
+            <div class="input-with-edit">
+              <select 
+                v-if="!modoEditarPuerto"
+                id="puertoEmbarque" 
+                v-model="datosViaje.puertoEmbarque" 
+                class="form-select" 
+                @change="validarImagen"
+              >
+                <option value="">Seleccionar puerto</option>
+                <option v-for="puerto in puertosEmbarque" :key="puerto" :value="puerto">
+                  {{ puerto }}
+                </option>
+              </select>
+              <input 
+                v-else
+                type="text" 
+                v-model="puertoEditando"
+                class="form-input edit-input"
+                placeholder="Editar puerto"
+                @keyup.enter="guardarEdicionPuerto"
+              />
+              <button 
+                v-if="datosViaje.puertoEmbarque && !modoEditarPuerto" 
+                @click="activarEdicionPuerto"
+                class="btn-edit-inline"
+                title="Editar puerto"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button 
+                v-if="modoEditarPuerto" 
+                @click="guardarEdicionPuerto"
+                class="btn-save-inline"
+                title="Guardar cambios"
+              >
+                <i class="fas fa-check"></i>
+              </button>
+              <button 
+                v-if="modoEditarPuerto" 
+                @click="cancelarEdicionPuerto"
+                class="btn-cancel-inline"
+                title="Cancelar"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -102,7 +182,7 @@
             </select>
           </div>
 
-          <!-- Medio de Pago MEJORADO -->
+          <!-- Medio de Pago -->
           <div class="form-group">
             <label>Medio de pago:</label>
             <div class="payment-methods">
@@ -147,7 +227,7 @@
               <label for="pagoMixto">Pago Mixto</label>
             </div>
 
-            <!-- Mostrar resumen del pago seleccionado -->
+            <!-- Resumen del pago -->
             <div v-if="datosViaje.medioPago && !datosViaje.pagoMixto" class="payment-summary">
               <div class="payment-info">
                 <i :class="getPaymentIcon(datosViaje.medioPago)"></i>
@@ -173,9 +253,9 @@
           </div>
         </div>
 
-        <!-- Columna Derecha - Datos del Cliente + Notas -->
+        <!-- Columna Derecha -->
         <div class="form-column">
-          <!-- Indicador de datos bloqueados -->
+          <!-- Datos del Cliente Bloqueados -->
           <div class="cliente-locked-info">
             <div class="locked-header">
               <i class="fas fa-lock"></i>
@@ -183,7 +263,6 @@
             </div>
           </div>
 
-          <!-- Datos del Cliente - CAMPOS BLOQUEADOS -->
           <div class="form-group">
             <label for="nombreCliente">Nombre del Cliente:</label>
             <input 
@@ -191,7 +270,7 @@
               type="text"
               v-model="datosViaje.nombreCliente"
               class="form-input form-input-locked"
-              placeholder="Cargado automáticamente desde el cliente seleccionado"
+              placeholder="Cargado automáticamente"
               readonly
               disabled
             >
@@ -208,7 +287,7 @@
               type="text"
               v-model="datosViaje.documentoCliente"
               class="form-input form-input-locked"
-              placeholder="Cargado automáticamente desde el cliente seleccionado"
+              placeholder="Cargado automáticamente"
               readonly
               disabled
             >
@@ -225,7 +304,7 @@
               type="text"
               v-model="datosViaje.contactoCliente"
               class="form-input form-input-locked"
-              placeholder="Cargado automáticamente desde el cliente seleccionado"
+              placeholder="Cargado automáticamente"
               readonly
               disabled
             >
@@ -242,7 +321,7 @@
               type="text"
               v-model="datosViaje.nacionalidadCliente"
               class="form-input form-input-locked"
-              placeholder="Cargado automáticamente desde el cliente seleccionado"
+              placeholder="Cargado automáticamente"
               readonly
               disabled
             >
@@ -266,7 +345,7 @@
         </div>
       </div>
 
-      <!-- Botones de Acción del Formulario -->
+      <!-- Botones de Acción -->
       <div class="form-actions">
         <button @click="guardarTodo" class="btn-save-all">
           <i class="fas fa-save"></i>
@@ -279,14 +358,11 @@
       </div>
     </div>
 
-    <!-- Modal para Pago en Efectivo -->
+    <!-- Modal Pago Efectivo -->
     <div v-if="mostrarModalEfectivo" class="modal-overlay" @click="cerrarModalEfectivo">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>
-            <i class="fas fa-money-bill-wave"></i>
-            Pago en Efectivo
-          </h3>
+          <h3><i class="fas fa-money-bill-wave"></i> Pago en Efectivo</h3>
           <button @click="cerrarModalEfectivo" class="btn-close-modal">
             <i class="fas fa-times"></i>
           </button>
@@ -297,7 +373,6 @@
               <label>Total a pagar:</label>
               <div class="amount-display">S/ {{ totalGeneral.toFixed(2) }}</div>
             </div>
-            
             <div class="cantidad-cliente">
               <label for="cantidadCliente">Cantidad que da el cliente:</label>
               <input 
@@ -311,7 +386,6 @@
                 placeholder="0.00"
               >
             </div>
-            
             <div class="vuelto-display">
               <label>Vuelto:</label>
               <div class="amount-display" :class="{ 'negative': vuelto < 0 }">
@@ -337,14 +411,11 @@
       </div>
     </div>
 
-    <!-- Modal para Pago Mixto -->
+    <!-- Modal Pago Mixto -->
     <div v-if="mostrarModalPagoMixto" class="modal-overlay" @click="cerrarModalPagoMixto">
       <div class="modal-content modal-mixto" @click.stop>
         <div class="modal-header">
-          <h3>
-            <i class="fas fa-coins"></i>
-            Configurar Pago Mixto
-          </h3>
+          <h3><i class="fas fa-coins"></i> Configurar Pago Mixto</h3>
           <button @click="cerrarModalPagoMixto" class="btn-close-modal">
             <i class="fas fa-times"></i>
           </button>
@@ -355,13 +426,9 @@
               <label>Total a pagar:</label>
               <div class="amount-display">S/ {{ totalGeneral.toFixed(2) }}</div>
             </div>
-            
             <div class="payment-breakdown-form">
               <div class="payment-method-input">
-                <label>
-                  <i class="fas fa-money-bill-wave"></i>
-                  Efectivo:
-                </label>
+                <label><i class="fas fa-money-bill-wave"></i> Efectivo:</label>
                 <input 
                   type="number" 
                   v-model="pagoMixtoTemp.efectivo"
@@ -372,12 +439,8 @@
                   placeholder="0.00"
                 >
               </div>
-              
               <div class="payment-method-input">
-                <label>
-                  <i class="fab fa-cc-visa"></i>
-                  Yape:
-                </label>
+                <label><i class="fab fa-cc-visa"></i> Yape:</label>
                 <input 
                   type="number" 
                   v-model="pagoMixtoTemp.yape"
@@ -388,12 +451,8 @@
                   placeholder="0.00"
                 >
               </div>
-              
               <div class="payment-method-input">
-                <label>
-                  <i class="fas fa-mobile-alt"></i>
-                  Plin:
-                </label>
+                <label><i class="fas fa-mobile-alt"></i> Plin:</label>
                 <input 
                   type="number" 
                   v-model="pagoMixtoTemp.plin"
@@ -405,7 +464,6 @@
                 >
               </div>
             </div>
-            
             <div class="total-calculado">
               <div class="subtotal-line">
                 <span>Subtotal pagado:</span>
@@ -418,7 +476,6 @@
                 <span v-else-if="diferenciaPago < 0" class="status-text">(Sobra)</span>
                 <span v-else class="status-text">(Exacto)</span>
               </div>
-              
               <div v-if="diferenciaPago !== 0" class="error-message">
                 <i class="fas fa-exclamation-triangle"></i>
                 El total debe coincidir exactamente con S/ {{ totalGeneral.toFixed(2) }}
@@ -447,7 +504,7 @@
       </div>
     </div>
 
-    <!-- Mensajes de notificación -->
+    <!-- Notificaciones -->
     <div v-if="mensaje" :class="['notification', tipoMensaje]">
       <i :class="iconoMensaje"></i>
       <span>{{ mensaje }}</span>
@@ -470,6 +527,14 @@ export default {
       detalleActualId: null,
       puedeGenerarImagen: false,
       
+      // Modos de edición
+      modoEditarEmbarcacion: false,
+      modoEditarPuerto: false,
+      embarcacionEditando: '',
+      puertoEditando: '',
+      embarcacionOriginal: '',
+      puertoOriginal: '',
+      
       mostrarModalEfectivo: false,
       mostrarModalPagoMixto: false,
       
@@ -487,52 +552,16 @@ export default {
         plin: 0
       },
       
-      embarcaciones: [
-        'KAORY',
-        'DON JULIO',
-        'ORIENTE 1',
-        'HAYDEE',
-        'MACHI MACHIN',
-        'MAGIN',
-        'TONY',
-        'CRISTIAN',
-        'ALEAXIA',
-        'ROMERO',
-        'NR',
-        'VALERIA 1',
-        'ZOE ALEXA',
-        'RAYZA',
-        'DOÑA LIDIA'
-      ],
-
-      puertosEmbarque: [
-        'CALLE PEVAS #456',
-        'CALLE PEVAS #408',
-        'CALLE REQUENA #155',
-        'CALLE ABTAO #1350',
-        'PUERTO PRINCIPAL DE NAUTA',
-        'CALLE JR LIMA #712 (NAUTA)',
-        'PUERTO LA BOCA',
-        'PUERTO MAGIN',
-        'LA CAPITANIA',
-        'PUERTO DIEGUITO',
-        'PUERTO SAJUTA',
-        'LA CASONA DE SAJUTA',
-        'PUERTO RELOJ PÚBLICO',
-        'PUERTO GANZO AZUL',
-        'LA BALSA MUNICIPAL',
-        'FITZCARRALD #377',
-        'PUERTO MANAOS',
-        'CALLE NAUTA #342',
-        'PUERTO PRINCIPAL DE'
-      ],
+      embarcaciones: [],
+      puertosEmbarque: [],
 
       horasDisponibles: [
-        '06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM',
-        '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-        '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM',
-        '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM',
-        '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM'
+        '04:00 AM', '04:30 AM', '05:00 AM', '05:30 AM', '06:00 AM', '06:30 AM', 
+        '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', 
+        '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', 
+        '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', 
+        '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', 
+        '07:00 PM', '07:30 PM', '08:00 PM'
       ],
 
       detallesPasaje: [],
@@ -583,63 +612,209 @@ export default {
   },
 
   mounted() {
-    console.log('🚀 Componente DetallesPasajeView montado')
-    
     this.inicializarListas()
     this.cargarDatosDesdeFormulario()
     this.cargarDatosCliente()
-    this.verificarNuevosDatosFormulario()
     this.cargarEmbarcacionesYPuertos()
+    this.sincronizarDatosDesdeAgregarDetalle()
+    
+    // Escuchar evento de sincronización desde AgregarDetalleView
+    window.addEventListener('elementosActualizados', this.sincronizarDatosDesdeAgregarDetalle)
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('elementosActualizados', this.sincronizarDatosDesdeAgregarDetalle)
   },
 
   methods: {
+    // NUEVAS FUNCIONES DE SINCRONIZACIÓN Y EDICIÓN
+    
+    sincronizarDatosDesdeAgregarDetalle() {
+      console.log('🔄 Sincronizando datos desde AgregarDetalleView...')
+      
+      // Cargar embarcaciones desde localStorage
+      const embarcacionesGuardadas = localStorage.getItem('embarcacionesPersonalizadas')
+      if (embarcacionesGuardadas) {
+        try {
+          const embarcacionesArray = JSON.parse(embarcacionesGuardadas)
+          embarcacionesArray.forEach(embarcacion => {
+            if (!this.embarcaciones.includes(embarcacion)) {
+              this.embarcaciones.push(embarcacion)
+            }
+          })
+        } catch (error) {
+          console.error('Error cargando embarcaciones:', error)
+        }
+      }
+      
+      // Cargar puertos desde localStorage
+      const puertosGuardados = localStorage.getItem('puertosPersonalizados')
+      if (puertosGuardados) {
+        try {
+          const puertosArray = JSON.parse(puertosGuardados)
+          puertosArray.forEach(puerto => {
+            if (!this.puertosEmbarque.includes(puerto)) {
+              this.puertosEmbarque.push(puerto)
+            }
+          })
+        } catch (error) {
+          console.error('Error cargando puertos:', error)
+        }
+      }
+      
+      // Cargar embarcación y puerto desde sessionStorage (datos del pasaje actual)
+      const datosPasaje = sessionStorage.getItem('datosPasajeNavegacion')
+      if (datosPasaje) {
+        try {
+          const datos = JSON.parse(datosPasaje)
+          
+          if (datos.embarcacion) {
+            if (!this.embarcaciones.includes(datos.embarcacion)) {
+              this.embarcaciones.push(datos.embarcacion)
+            }
+            this.datosViaje.embarcacion = datos.embarcacion
+            this.mostrarMensaje(`Embarcación "${datos.embarcacion}" cargada automáticamente`, 'success')
+          }
+          
+          if (datos.puerto_embarque) {
+            if (!this.puertosEmbarque.includes(datos.puerto_embarque)) {
+              this.puertosEmbarque.push(datos.puerto_embarque)
+            }
+            this.datosViaje.puertoEmbarque = datos.puerto_embarque
+            this.mostrarMensaje(`Puerto "${datos.puerto_embarque}" cargado automáticamente`, 'success')
+          }
+          
+          this.validarImagen()
+        } catch (error) {
+          console.error('Error sincronizando datos del pasaje:', error)
+        }
+      }
+      
+      console.log('✅ Sincronización completada:', {
+        embarcaciones: this.embarcaciones.length,
+        puertos: this.puertosEmbarque.length,
+        embarcacionActual: this.datosViaje.embarcacion,
+        puertoActual: this.datosViaje.puertoEmbarque
+      })
+    },
+    
+    activarEdicionEmbarcacion() {
+      this.embarcacionOriginal = this.datosViaje.embarcacion
+      this.embarcacionEditando = this.datosViaje.embarcacion
+      this.modoEditarEmbarcacion = true
+    },
+    
+    guardarEdicionEmbarcacion() {
+      if (!this.embarcacionEditando || this.embarcacionEditando.trim() === '') {
+        this.mostrarMensaje('El nombre de la embarcación no puede estar vacío', 'warning')
+        return
+      }
+      
+      const embarcacionNueva = this.embarcacionEditando.toUpperCase().trim()
+      
+      // Actualizar en el array si no existe
+      if (!this.embarcaciones.includes(embarcacionNueva)) {
+        this.embarcaciones.push(embarcacionNueva)
+        
+        // Actualizar localStorage
+        const embarcacionesGuardadas = JSON.parse(localStorage.getItem('embarcacionesPersonalizadas') || '[]')
+        if (!embarcacionesGuardadas.includes(embarcacionNueva)) {
+          embarcacionesGuardadas.push(embarcacionNueva)
+          localStorage.setItem('embarcacionesPersonalizadas', JSON.stringify(embarcacionesGuardadas))
+        }
+      }
+      
+      // Actualizar el valor seleccionado
+      this.datosViaje.embarcacion = embarcacionNueva
+      this.modoEditarEmbarcacion = false
+      
+      this.mostrarMensaje(`Embarcación actualizada a "${embarcacionNueva}"`, 'success')
+      this.validarImagen()
+      
+      // Disparar evento para sincronizar con otros componentes
+      window.dispatchEvent(new Event('elementosActualizados'))
+    },
+    
+    cancelarEdicionEmbarcacion() {
+      this.datosViaje.embarcacion = this.embarcacionOriginal
+      this.modoEditarEmbarcacion = false
+      this.embarcacionEditando = ''
+    },
+    
+    activarEdicionPuerto() {
+      this.puertoOriginal = this.datosViaje.puertoEmbarque
+      this.puertoEditando = this.datosViaje.puertoEmbarque
+      this.modoEditarPuerto = true
+    },
+    
+    guardarEdicionPuerto() {
+      if (!this.puertoEditando || this.puertoEditando.trim() === '') {
+        this.mostrarMensaje('El nombre del puerto no puede estar vacío', 'warning')
+        return
+      }
+      
+      const puertoNuevo = this.puertoEditando.toUpperCase().trim()
+      
+      // Actualizar en el array si no existe
+      if (!this.puertosEmbarque.includes(puertoNuevo)) {
+        this.puertosEmbarque.push(puertoNuevo)
+        
+        // Actualizar localStorage
+        const puertosGuardados = JSON.parse(localStorage.getItem('puertosPersonalizados') || '[]')
+        if (!puertosGuardados.includes(puertoNuevo)) {
+          puertosGuardados.push(puertoNuevo)
+          localStorage.setItem('puertosPersonalizados', JSON.stringify(puertosGuardados))
+        }
+      }
+      
+      // Actualizar el valor seleccionado
+      this.datosViaje.puertoEmbarque = puertoNuevo
+      this.modoEditarPuerto = false
+      
+      this.mostrarMensaje(`Puerto actualizado a "${puertoNuevo}"`, 'success')
+      this.validarImagen()
+      
+      // Disparar evento para sincronizar con otros componentes
+      window.dispatchEvent(new Event('elementosActualizados'))
+    },
+    
+    cancelarEdicionPuerto() {
+      this.datosViaje.puertoEmbarque = this.puertoOriginal
+      this.modoEditarPuerto = false
+      this.puertoEditando = ''
+    },
+
+    // FUNCIONES EXISTENTES
+    
     inicializarListas() {
       console.log('📋 Inicializando listas de embarcaciones y puertos...')
       
+      // Listas base predefinidas
+      const embarcacionesBase = [
+        'KAORY', 'DON JULIO', 'ORIENTE 1', 'HAYDEE', 'MACHI MACHIN', 
+        'MAGIN', 'TONY', 'CRISTIAN', 'ALEAXIA', 'ROMERO', 'NR', 
+        'VALERIA 1', 'ZOE ALEXA', 'RAYZA', 'DOÑA LIDIA'
+      ]
+      
+      const puertosBase = [
+        'CALLE PEVAS #456', 'CALLE PEVAS #408', 'CALLE REQUENA #155', 
+        'CALLE ABTAO #1350', 'PUERTO PRINCIPAL DE NAUTA', 
+        'CALLE JR LIMA #712 (NAUTA)', 'PUERTO LA BOCA', 'PUERTO MAGIN', 
+        'LA CAPITANIA', 'PUERTO DIEGUITO', 'PUERTO SAJUTA', 
+        'LA CASONA DE SAJUTA', 'PUERTO RELOJ PÚBLICO', 'PUERTO GANZO AZUL', 
+        'LA BALSA MUNICIPAL', 'FITZCARRALD #377', 'PUERTO MANAOS', 
+        'CALLE NAUTA #342', 'PUERTO PRINCIPAL DE TROMPETEROS'
+      ]
+      
+      // Inicializar solo si están vacías
       if (this.embarcaciones.length === 0) {
-        this.embarcaciones = [
-          'KAORY',
-          'DON JULIO',
-          'ORIENTE 1',
-          'HAYDEE',
-          'MACHI MACHIN',
-          'MAGIN',
-          'TONY',
-          'CRISTIAN',
-          'ALEAXIA',
-          'ROMERO',
-          'NR',
-          'VALERIA 1',
-          'ZOE ALEXA',
-          'RAYZA',
-          'DOÑA LIDIA'
-        ]
+        this.embarcaciones = [...embarcacionesBase]
       }
-
+      
       if (this.puertosEmbarque.length === 0) {
-        this.puertosEmbarque = [
-          'CALLE PEVAS #456',
-          'CALLE PEVAS #408',
-          'CALLE REQUENA #155',
-          'CALLE ABTAO #1350',
-          'PUERTO PRINCIPAL DE NAUTA',
-          'CALLE JR LIMA #712 (NAUTA)',
-          'PUERTO LA BOCA',
-          'PUERTO MAGIN',
-          'LA CAPITANIA',
-          'PUERTO DIEGUITO',
-          'PUERTO SAJUTA',
-          'LA CASONA DE SAJUTA',
-          'PUERTO RELOJ PÚBLICO',
-          'PUERTO GANZO AZUL',
-          'LA BALSA MUNICIPAL',
-          'FITZCARRALD #377',
-          'PUERTO MANAOS',
-          'CALLE NAUTA #342',
-          'PUERTO PRINCIPAL DE'
-        ]
+        this.puertosEmbarque = [...puertosBase]
       }
-
+      
       console.log('✅ Listas inicializadas:', {
         embarcaciones: this.embarcaciones.length,
         puertos: this.puertosEmbarque.length
@@ -648,8 +823,9 @@ export default {
 
     async cargarEmbarcacionesYPuertos() {
       try {
-        console.log('📡 Intentando cargar embarcaciones y puertos desde la API...')
+        console.log('📡 Cargando embarcaciones y puertos desde API y localStorage...')
         
+        // Intentar cargar desde API
         try {
           const responseEmbarcaciones = await fetch('/api/embarcaciones', {
             method: 'GET',
@@ -663,19 +839,17 @@ export default {
           if (responseEmbarcaciones.ok) {
             const resultEmbarcaciones = await responseEmbarcaciones.json()
             if (resultEmbarcaciones.success && resultEmbarcaciones.data) {
-              const embarcacionesAPI = resultEmbarcaciones.data.map(embarcacion => embarcacion.nombre)
-              
-              embarcacionesAPI.forEach(embarcacion => {
-                if (!this.embarcaciones.includes(embarcacion)) {
-                  this.embarcaciones.push(embarcacion)
+              const embarcacionesAPI = resultEmbarcaciones.data.map(e => e.nombre)
+              embarcacionesAPI.forEach(emb => {
+                if (!this.embarcaciones.includes(emb)) {
+                  this.embarcaciones.push(emb)
                 }
               })
-              
-              console.log('✅ Embarcaciones actualizadas desde API')
+              console.log('✅ Embarcaciones cargadas desde API')
             }
           }
-        } catch (errorEmbarcaciones) {
-          console.log('⚠️ API de embarcaciones no disponible, usando valores por defecto')
+        } catch (error) {
+          console.log('⚠️ API de embarcaciones no disponible')
         }
 
         try {
@@ -691,73 +865,25 @@ export default {
           if (responsePuertos.ok) {
             const resultPuertos = await responsePuertos.json()
             if (resultPuertos.success && resultPuertos.data) {
-              const puertosAPI = resultPuertos.data.map(puerto => puerto.nombre)
-              
+              const puertosAPI = resultPuertos.data.map(p => p.nombre)
               puertosAPI.forEach(puerto => {
                 if (!this.puertosEmbarque.includes(puerto)) {
                   this.puertosEmbarque.push(puerto)
                 }
               })
-              
-              console.log('✅ Puertos actualizados desde API')
+              console.log('✅ Puertos cargados desde API')
             }
           }
-        } catch (errorPuertos) {
-          console.log('⚠️ API de puertos no disponible, usando valores por defecto')
+        } catch (error) {
+          console.log('⚠️ API de puertos no disponible')
         }
 
-        this.verificarNuevosDatosFormulario()
+        // Cargar personalizados desde localStorage
+        this.sincronizarDatosDesdeAgregarDetalle()
         
       } catch (error) {
-        console.log('ℹ️ APIs no disponibles, continuando con valores por defecto')
-        this.verificarNuevosDatosFormulario()
+        console.log('ℹ️ Error general, usando valores por defecto')
       }
-    },
-
-    verificarNuevosDatosFormulario() {
-      console.log('🔍 Verificando nuevos datos desde formulario...')
-      
-      let huboActualizacion = false
-      
-      const nuevaEmbarcacion = sessionStorage.getItem('nuevaEmbarcacion') || 
-                              sessionStorage.getItem('nuevaEmbarcacionAgregada')
-      if (nuevaEmbarcacion && nuevaEmbarcacion.trim() !== '') {
-        if (!this.embarcaciones.includes(nuevaEmbarcacion)) {
-          this.embarcaciones.push(nuevaEmbarcacion)
-          huboActualizacion = true
-        }
-        this.datosViaje.embarcacion = nuevaEmbarcacion
-        console.log('🚢 Nueva embarcación agregada automáticamente:', nuevaEmbarcacion)
-        this.mostrarMensaje(`Embarcación "${nuevaEmbarcacion}" agregada automáticamente`, 'success')
-        sessionStorage.removeItem('nuevaEmbarcacion')
-        sessionStorage.removeItem('nuevaEmbarcacionAgregada')
-      }
-
-      const nuevoPuerto = sessionStorage.getItem('nuevoPuertoEmbarque') || 
-                         sessionStorage.getItem('nuevoPuertoAgregado')
-      if (nuevoPuerto && nuevoPuerto.trim() !== '') {
-        if (!this.puertosEmbarque.includes(nuevoPuerto)) {
-          this.puertosEmbarque.push(nuevoPuerto)
-          huboActualizacion = true
-        }
-        this.datosViaje.puertoEmbarque = nuevoPuerto
-        console.log('⚓ Nuevo puerto agregado automáticamente:', nuevoPuerto)
-        this.mostrarMensaje(`Puerto "${nuevoPuerto}" agregado automáticamente`, 'success')
-        sessionStorage.removeItem('nuevoPuertoEmbarque')
-        sessionStorage.removeItem('nuevoPuertoAgregado')
-      }
-
-      if (huboActualizacion) {
-        this.validarImagen()
-        this.$forceUpdate()
-      }
-
-      console.log('📊 Estado actual de listas:', {
-        embarcaciones: this.embarcaciones.length,
-        puertos: this.puertosEmbarque.length,
-        embarcacionSeleccionada: this.datosViaje.embarcacion,
-        puertoSeleccionado: this.datosViaje.puertoEmbarque
-      })
     },
 
     seleccionarMedioPago(tipo) {
@@ -811,25 +937,17 @@ export default {
     },
 
     abrirModalPagoMixto() {
-      this.pagoMixtoTemp = {
-        efectivo: 0,
-        yape: 0,
-        plin: 0
-      }
+      this.pagoMixtoTemp = { efectivo: 0, yape: 0, plin: 0 }
       this.mostrarModalPagoMixto = true
     },
 
     cerrarModalPagoMixto() {
       this.mostrarModalPagoMixto = false
-      this.pagoMixtoTemp = {
-        efectivo: 0,
-        yape: 0,
-        plin: 0
-      }
+      this.pagoMixtoTemp = { efectivo: 0, yape: 0, plin: 0 }
     },
 
     calcularPagoMixto() {
-      // El cálculo se hace automáticamente con computed properties
+      // Calculado automáticamente con computed properties
     },
 
     confirmarPagoMixto() {
@@ -854,22 +972,11 @@ export default {
         this.mostrarMensaje('Pago mixto configurado correctamente', 'success')
         this.cerrarModalPagoMixto()
         this.validarImagen()
-        
-        console.log('✅ Pago mixto confirmado:', {
-          pagoMixto: this.datosViaje.pagoMixto,
-          medioPago: this.datosViaje.medioPago,
-          detalles: this.datosViaje.detallesPago,
-          montos: this.pagoMixtoDetalle
-        })
       }
     },
 
     limpiarPagoMixto() {
-      this.pagoMixtoDetalle = {
-        efectivo: 0,
-        yape: 0,
-        plin: 0
-      }
+      this.pagoMixtoDetalle = { efectivo: 0, yape: 0, plin: 0 }
       if (!this.datosViaje.medioPago) {
         this.datosViaje.detallesPago = ''
       }
@@ -900,8 +1007,6 @@ export default {
       if (datosCliente) {
         try {
           const cliente = JSON.parse(datosCliente)
-          console.log('✅ Datos del cliente encontrados:', cliente)
-          
           this.datosViaje.nombreCliente = cliente.nombre || ''
           this.datosViaje.documentoCliente = cliente.documento || ''
           this.datosViaje.contactoCliente = cliente.contacto || ''
@@ -910,12 +1015,8 @@ export default {
           this.mostrarMensaje('Datos del cliente cargados automáticamente', 'info')
           this.validarImagen()
         } catch (error) {
-          console.error('❌ Error al cargar datos del cliente:', error)
           this.mostrarMensaje('Error al cargar los datos del cliente', 'warning')
         }
-      } else {
-        console.log('⚠️ No se encontraron datos del cliente en sessionStorage')
-        this.mostrarMensaje('No se encontraron datos del cliente. Complete manualmente si es necesario.', 'warning')
       }
     },
 
@@ -940,26 +1041,11 @@ export default {
       }
 
       this.puedeGenerarImagen = camposBasicos && medioPagoValido
-
-      console.log('📋 Validación Imagen:', {
-        tieneDetalles: this.detallesPasaje.length > 0,
-        embarcacion: !!this.datosViaje.embarcacion,
-        puerto: !!this.datosViaje.puertoEmbarque,
-        horaEmbarque: !!this.datosViaje.horaEmbarque,
-        horaSalida: !!this.datosViaje.horaSalida,
-        pagoMixto: this.datosViaje.pagoMixto,
-        medioPago: this.datosViaje.medioPago,
-        detallesPago: this.datosViaje.detallesPago,
-        medioPagoValido: medioPagoValido,
-        puedeGenerar: this.puedeGenerarImagen
-      })
     },
 
     async generarImagenBoleta() {
-      console.log('🖼️ Iniciando generación de imagen de boleta...')
-      
       if (!this.puedeGenerarImagen) {
-        this.mostrarMensaje('Complete todos los campos obligatorios: embarcación, puerto, horas y medio de pago', 'warning')
+        this.mostrarMensaje('Complete todos los campos obligatorios', 'warning')
         return
       }
 
@@ -968,10 +1054,7 @@ export default {
         this.mensajeCarga = 'Generando imagen del pasaje...'
         
         const datosCompletos = this.prepararDatosParaImagen()
-        
-        console.log('📤 Enviando datos para imagen:', datosCompletos)
 
-        // Usar la ruta CORRECTA que ya existe en tu PasajeController
         const response = await fetch('/api/pasajes/generar-imagen-tiempo-real', {
           method: 'POST',
           headers: {
@@ -983,34 +1066,21 @@ export default {
           body: JSON.stringify(datosCompletos)
         })
 
-        if (!response.ok) {
-          if (response.status === 405) {
-            throw new Error('Método no permitido. Verifique que la ruta esté configurada en routes/api.php')
-          }
-          throw new Error(`Error ${response.status}: ${response.statusText}`)
-        }
+        if (!response.ok) throw new Error(`Error ${response.status}`)
 
         const contentType = response.headers.get('content-type') || ''
-        console.log('📄 Content-Type recibido:', contentType)
 
-        // Tu controlador retorna HTML, así que procesamos como HTML
         if (contentType.includes('text/html')) {
-          console.log('✅ HTML recibido, procesando...')
           const htmlContent = await response.text()
           this.procesarHTMLBoleta(htmlContent)
         } else if (contentType.includes('application/json')) {
           const result = await response.json()
           if (result.success && result.imagen_base64) {
             this.descargarImagenDesdeBase64(result.imagen_base64)
-          } else {
-            throw new Error(result.message || 'Error en la respuesta del servidor')
           }
-        } else {
-          throw new Error('Tipo de respuesta no esperado: ' + contentType)
         }
 
       } catch (error) {
-        console.error('❌ Error generando imagen:', error)
         this.mostrarMensaje(`Error al generar la imagen: ${error.message}`, 'error')
       } finally {
         this.cargando = false
@@ -1018,165 +1088,90 @@ export default {
     },
 
     procesarHTMLBoleta(htmlContent) {
-      try {
-        console.log('📄 Procesando HTML de la boleta...')
-        
-        // Abrir el HTML en una nueva ventana para que el usuario pueda imprimir o guardar
-        const newWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
-        
-        if (newWindow) {
-          newWindow.document.write(htmlContent)
-          newWindow.document.close()
-          newWindow.focus()
-          
-          this.mostrarMensaje('Boleta generada correctamente. Use Ctrl+P para imprimir o clic derecho > Guardar como...', 'success')
-          
-          console.log('✅ Boleta abierta en nueva ventana')
-        } else {
-          throw new Error('No se pudo abrir ventana. Verifique el bloqueador de ventanas emergentes.')
-        }
-      } catch (error) {
-        console.error('❌ Error procesando HTML:', error)
-        this.mostrarMensaje('Error al mostrar la boleta: ' + error.message, 'error')
+      const newWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
+      
+      if (newWindow) {
+        newWindow.document.write(htmlContent)
+        newWindow.document.close()
+        newWindow.focus()
+        this.mostrarMensaje('Boleta generada correctamente', 'success')
+      } else {
+        throw new Error('No se pudo abrir ventana')
       }
     },
 
     descargarImagenDesdeBase64(base64Data) {
-      try {
-        console.log('🔄 Convirtiendo base64 a blob...')
-        
-        const base64Limpio = base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '')
-        
-        const byteCharacters = atob(base64Limpio)
-        const byteNumbers = new Array(byteCharacters.length)
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i)
-        }
-        const byteArray = new Uint8Array(byteNumbers)
-        const blob = new Blob([byteArray], { type: 'image/jpeg' })
-        
-        console.log('✅ Blob creado, tamaño:', blob.size, 'bytes')
-        
-        this.descargarImagenJPG(blob)
-      } catch (error) {
-        console.error('❌ Error procesando imagen base64:', error)
-        this.mostrarMensaje('Error al procesar la imagen generada: ' + error.message, 'error')
+      const base64Limpio = base64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, '')
+      const byteCharacters = atob(base64Limpio)
+      const byteNumbers = new Array(byteCharacters.length)
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
       }
+      
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'image/jpeg' })
+      this.descargarImagenJPG(blob)
     },
 
     descargarImagenJPG(blob) {
-      try {
-        console.log('💾 Iniciando descarga de imagen JPG...')
-        
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        
-        const fecha = new Date()
-        const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`
-        const horaStr = `${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}`
-        
-        const nombreCliente = this.datosViaje.nombreCliente 
-          ? this.datosViaje.nombreCliente.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20)
-          : 'Cliente'
-        
-        const nombreArchivo = `Boleta_${nombreCliente}_${fechaStr}_${horaStr}.jpg`
-        
-        link.download = nombreArchivo
-        link.style.display = 'none'
-        
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url)
-        }, 1000)
-        
-        this.mostrarMensaje(`Imagen descargada exitosamente: ${nombreArchivo}`, 'success')
-        
-        console.log('✅ Imagen descargada:', nombreArchivo)
-        
-      } catch (error) {
-        console.error('❌ Error descargando imagen:', error)
-        this.mostrarMensaje('Error al descargar la imagen: ' + error.message, 'error')
-      }
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      const fecha = new Date()
+      const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`
+      const horaStr = `${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}`
+      const nombreCliente = this.datosViaje.nombreCliente 
+        ? this.datosViaje.nombreCliente.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20)
+        : 'Cliente'
+      
+      link.download = `Boleta_${nombreCliente}_${fechaStr}_${horaStr}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+      this.mostrarMensaje('Imagen descargada exitosamente', 'success')
     },
 
     prepararDatosParaImagen() {
       const ahora = new Date()
-      const fechaActual = this.formatearFecha(ahora)
-      const horaActual = this.formatearHora(ahora)
       const primerDetalle = this.detallesPasaje[0]
       
-      if (!primerDetalle) {
-        throw new Error('No hay detalles de pasaje disponibles')
-      }
+      if (!primerDetalle) throw new Error('No hay detalles de pasaje')
       
-      const datosParaImagen = {
-        // Información del cliente (estructura que espera tu controlador)
+      return {
         cliente: {
           nombre: this.datosViaje.nombreCliente || 'CLIENTE',
           documento: this.datosViaje.documentoCliente || '',
           contacto: this.datosViaje.contactoCliente || '',
           nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
         },
-        
-        // Detalles del pasaje
         cantidad: primerDetalle.cantidad || 1,
         descripcion: primerDetalle.descripcion || 'Pasaje',
         precio_unitario: parseFloat(primerDetalle.precio_unitario || 0),
         subtotal: parseFloat(primerDetalle.subtotal || 0),
         total: parseFloat(this.totalGeneral),
-        
-        // Datos del viaje
         embarcacion: this.datosViaje.embarcacion || '',
         puerto_embarque: this.datosViaje.puertoEmbarque || '',
         hora_embarque: this.datosViaje.horaEmbarque || '',
         hora_salida: this.datosViaje.horaSalida || '',
-        
-        // Información de pago
         medio_pago: this.datosViaje.medioPago || 'efectivo',
         pago_mixto: this.datosViaje.pagoMixto || false,
         detalles_pago: this.datosViaje.detallesPago || '',
-        
-        // Información adicional
         nota: this.datosViaje.nota || '',
         destino: primerDetalle.destino || '',
         ruta: primerDetalle.ruta || primerDetalle.descripcion || '',
-        
-        // Campos para compatibilidad con el controlador
-        fecha_emision: fechaActual,
-        hora_emision: horaActual,
+        fecha_emision: this.formatearFecha(ahora),
+        hora_emision: this.formatearHora(ahora),
         operador: 'ROCÍO TRAVEL'
       }
-      
-      console.log('📋 Datos preparados para imagen:', datosParaImagen)
-      return datosParaImagen
-    },
-
-    generarNumeroBoleta() {
-      const ahora = new Date()
-      const año = ahora.getFullYear().toString().slice(-2)
-      const mes = String(ahora.getMonth() + 1).padStart(2, '0')
-      const dia = String(ahora.getDate()).padStart(2, '0')
-      const hora = String(ahora.getHours()).padStart(2, '0')
-      const minuto = String(ahora.getMinutes()).padStart(2, '0')
-      const random = Math.floor(Math.random() * 999).toString().padStart(3, '0')
-      
-      return `BOL-${año}${mes}${dia}-${hora}${minuto}${random}`
     },
 
     async imprimirTicketVenta() {
-      console.log('🎫 Iniciando generación de ticket de venta...')
-      
       if (!this.puedeGenerarImagen) {
-        this.mostrarMensaje('Complete todos los campos obligatorios para imprimir el ticket', 'warning')
-        return
-      }
-
-      if (this.detallesPasaje.length === 0) {
-        this.mostrarMensaje('No hay detalles de pasaje para generar el ticket', 'error')
+        this.mostrarMensaje('Complete todos los campos obligatorios', 'warning')
         return
       }
 
@@ -1185,8 +1180,6 @@ export default {
         this.mensajeCarga = 'Generando ticket de venta...'
         
         const datosCompletos = this.prepararDatosParaTicket()
-        
-        console.log('🎫 Datos preparados para ticket:', JSON.stringify(datosCompletos, null, 2))
 
         const response = await fetch('/api/pasajes/generar-ticket-venta', {
           method: 'POST',
@@ -1201,24 +1194,19 @@ export default {
 
         if (response.ok) {
           const htmlContent = await response.text()
-          const ticketWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes,resizable=yes')
+          const ticketWindow = window.open('', '_blank', 'width=400,height=600')
           
           if (ticketWindow) {
             ticketWindow.document.write(htmlContent)
             ticketWindow.document.close()
             ticketWindow.focus()
-            this.mostrarMensaje('Ticket de venta generado exitosamente', 'success')
-          } else {
-            throw new Error('No se pudo abrir la ventana del ticket.')
+            this.mostrarMensaje('Ticket generado exitosamente', 'success')
           }
         } else {
-          const errorText = await response.text()
-          console.error('Error del servidor:', errorText)
-          throw new Error(`Error ${response.status}: ${response.statusText}`)
+          throw new Error(`Error ${response.status}`)
         }
 
       } catch (error) {
-        console.error('❌ Error generando ticket:', error)
         this.mostrarMensaje(`Error al generar el ticket: ${error.message}`, 'error')
       } finally {
         this.cargando = false
@@ -1227,13 +1215,9 @@ export default {
 
     prepararDatosParaTicket() {
       const ahora = new Date()
-      const fechaActual = this.formatearFecha(ahora)
-      const horaActual = this.formatearHoraTicket(ahora)
       const primerDetalle = this.detallesPasaje[0]
       
-      if (!primerDetalle) {
-        throw new Error('No hay detalles de pasaje disponibles')
-      }
+      if (!primerDetalle) throw new Error('No hay detalles de pasaje')
       
       let medioPagoTicket = 'efectivo'
       let esPagoMixto = false
@@ -1250,40 +1234,30 @@ export default {
       
       return {
         numero_ticket: this.generarNumeroTicket(),
-        fecha_emision: fechaActual,
-        hora_emision: horaActual,
-        
+        fecha_emision: this.formatearFecha(ahora),
+        hora_emision: this.formatearHoraTicket(ahora),
         cliente: {
           nombre: this.datosViaje.nombreCliente || 'CLIENTE',
           documento: this.datosViaje.documentoCliente || 'N/A',
           contacto: this.datosViaje.contactoCliente || 'N/A',
           nacionalidad: this.datosViaje.nacionalidadCliente || 'PERUANA'
         },
-        
-        nombre_cliente: this.datosViaje.nombreCliente || 'CLIENTE',
-        documento_cliente: this.datosViaje.documentoCliente || 'N/A',
-        contacto_cliente: this.datosViaje.contactoCliente || 'N/A',
-        nacionalidad_cliente: this.datosViaje.nacionalidadCliente || 'PERUANA',
-        
         cantidad: parseInt(primerDetalle.cantidad) || 1,
         descripcion: primerDetalle.descripcion || 'Pasaje',
         precio_unitario: parseFloat(primerDetalle.precio_unitario || 0).toFixed(2),
         subtotal: parseFloat(primerDetalle.subtotal || 0).toFixed(2),
         total: this.totalGeneral.toFixed(2),
-        
-        fecha_viaje: fechaActual,
+        fecha_viaje: this.formatearFecha(ahora),
         embarcacion: this.datosViaje.embarcacion || 'N/A',
         puerto_embarque: this.datosViaje.puertoEmbarque || 'N/A',
         hora_embarque: this.datosViaje.horaEmbarque || 'N/A',
         hora_salida: this.datosViaje.horaSalida || 'N/A',
-        
         medio_pago: medioPagoTicket,
         pago_mixto: esPagoMixto,
         detalles_pago: detallesPago,
-        
         nota: this.datosViaje.nota || '',
-        destino: primerDetalle.destino || primerDetalle.descripcion || 'N/A',
-        ruta: primerDetalle.ruta || primerDetalle.descripcion || 'N/A',
+        destino: primerDetalle.destino || 'N/A',
+        ruta: primerDetalle.ruta || 'N/A',
         operador: 'ROCÍO TRAVEL'
       }
     },
@@ -1306,27 +1280,23 @@ export default {
       return `${String(horas).padStart(2, '0')}:${minutos} ${ampm}`
     },
 
+    formatearHoraTicket(fecha) {
+      const horas = String(fecha.getHours()).padStart(2, '0')
+      const minutos = String(fecha.getMinutes()).padStart(2, '0')
+      const segundos = String(fecha.getSeconds()).padStart(2, '0')
+      return `${horas}:${minutos}:${segundos}`
+    },
+
     generarNumeroTicket() {
       const ahora = new Date()
       const año = ahora.getFullYear().toString().slice(-2)
       const mes = String(ahora.getMonth() + 1).padStart(2, '0')
       const dia = String(ahora.getDate()).padStart(2, '0')
       const random = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
-      
       return `NV-${año}${mes}${dia}${random}`
     },
 
-    formatearHoraTicket(fecha) {
-      const horas = String(fecha.getHours()).padStart(2, '0')
-      const minutos = String(fecha.getMinutes()).padStart(2, '0')
-      const segundos = String(fecha.getSeconds()).padStart(2, '0')
-      
-      return `${horas}:${minutos}:${segundos}`
-    },
-
     cargarDatosDesdeFormulario() {
-      console.log('🔍 Cargando datos desde el formulario anterior...')
-      
       const queryParams = this.$route.query
       const datosSessionStorage = sessionStorage.getItem('datosPasajeNavegacion')
       let datosParsed = null
@@ -1334,15 +1304,12 @@ export default {
       if (datosSessionStorage) {
         try {
           datosParsed = JSON.parse(datosSessionStorage)
-          console.log('📦 Datos desde sessionStorage:', datosParsed)
         } catch (error) {
-          console.error('Error al parsear datos de sessionStorage:', error)
+          console.error('Error al parsear datos:', error)
         }
       }
       
       const datosPasaje = Object.keys(queryParams).length > 0 ? queryParams : datosParsed
-      
-      console.log('📋 Datos del pasaje recibidos:', datosPasaje)
 
       if (datosPasaje && (datosPasaje.cantidad || datosPasaje.descripcion)) {
         const detalle = {
@@ -1354,36 +1321,44 @@ export default {
           ruta: datosPasaje.ruta || ''
         }
 
-        console.log('✅ Detalle creado:', detalle)
         this.detallesPasaje = [detalle]
-        
-        this.mostrarMensaje('Datos cargados desde el formulario anterior', 'success')
+        this.mostrarMensaje('Datos cargados correctamente', 'success')
         this.validarImagen()
-      } else {
-        console.log('⚠️ No se encontraron datos del pasaje')
-        this.mostrarMensaje('No se encontraron datos del formulario anterior', 'warning')
       }
     },
 
     async guardarTodo() {
-      console.log('💾 Iniciando guardado completo...')
-      
-      if (!this.validarFormularioCompleto()) {
-        return
-      }
+      if (!this.validarFormularioCompleto()) return
 
       this.cargando = true
       this.mensajeCarga = 'Guardando datos...'
+      
       try {
         await this.enviarTodosLosDatos()
-        this.mostrarMensaje('Todos los datos guardados correctamente', 'success')
         
-        setTimeout(() => {
-          // this.$router.push('/') // Opcional
-        }, 2000)
+        // Guardar embarcación y puerto en localStorage si son nuevos
+        if (this.datosViaje.embarcacion) {
+          const embarcacionesGuardadas = JSON.parse(localStorage.getItem('embarcacionesPersonalizadas') || '[]')
+          if (!embarcacionesGuardadas.includes(this.datosViaje.embarcacion)) {
+            embarcacionesGuardadas.push(this.datosViaje.embarcacion)
+            localStorage.setItem('embarcacionesPersonalizadas', JSON.stringify(embarcacionesGuardadas))
+          }
+        }
+        
+        if (this.datosViaje.puertoEmbarque) {
+          const puertosGuardados = JSON.parse(localStorage.getItem('puertosPersonalizados') || '[]')
+          if (!puertosGuardados.includes(this.datosViaje.puertoEmbarque)) {
+            puertosGuardados.push(this.datosViaje.puertoEmbarque)
+            localStorage.setItem('puertosPersonalizados', JSON.stringify(puertosGuardados))
+          }
+        }
+        
+        // Disparar evento de sincronización
+        window.dispatchEvent(new Event('elementosActualizados'))
+        
+        this.mostrarMensaje('Todos los datos guardados correctamente', 'success')
       } catch (error) {
-        console.error('Error al guardar todo:', error)
-        this.mostrarMensaje('Error al guardar todos los datos', 'error')
+        this.mostrarMensaje('Error al guardar los datos', 'error')
       } finally {
         this.cargando = false
       }
@@ -1391,42 +1366,33 @@ export default {
 
     validarFormularioCompleto() {
       if (this.detallesPasaje.length === 0) {
-        this.mostrarMensaje('No hay detalles de pasaje para guardar', 'warning')
+        this.mostrarMensaje('No hay detalles de pasaje', 'warning')
         return false
       }
       
       if (!this.datosViaje.embarcacion) {
-        this.mostrarMensaje('Debe seleccionar una embarcación', 'warning')
+        this.mostrarMensaje('Seleccione una embarcación', 'warning')
         return false
       }
       
       if (!this.datosViaje.puertoEmbarque) {
-        this.mostrarMensaje('Debe seleccionar un puerto de embarque', 'warning')
+        this.mostrarMensaje('Seleccione un puerto', 'warning')
         return false
       }
 
-      if (!this.datosViaje.horaEmbarque) {
-        this.mostrarMensaje('Debe seleccionar una hora de embarque', 'warning')
-        return false
-      }
-
-      if (!this.datosViaje.horaSalida) {
-        this.mostrarMensaje('Debe seleccionar una hora de salida', 'warning')
+      if (!this.datosViaje.horaEmbarque || !this.datosViaje.horaSalida) {
+        this.mostrarMensaje('Complete las horas', 'warning')
         return false
       }
 
       if (this.datosViaje.pagoMixto) {
         if (!this.datosViaje.detallesPago || this.datosViaje.detallesPago.trim() === '') {
-          this.mostrarMensaje('Debe configurar el pago mixto correctamente', 'warning')
-          return false
-        }
-        if (!(this.pagoMixtoDetalle.efectivo > 0 || this.pagoMixtoDetalle.yape > 0 || this.pagoMixtoDetalle.plin > 0)) {
-          this.mostrarMensaje('Debe configurar al menos un método de pago en el pago mixto', 'warning')
+          this.mostrarMensaje('Configure el pago mixto', 'warning')
           return false
         }
       } else {
         if (!this.datosViaje.medioPago || this.datosViaje.medioPago.trim() === '') {
-          this.mostrarMensaje('Debe seleccionar un medio de pago', 'warning')
+          this.mostrarMensaje('Seleccione un medio de pago', 'warning')
           return false
         }
       }
@@ -1471,8 +1437,6 @@ export default {
         nacionalidad_cliente: this.datosViaje.nacionalidadCliente
       }
 
-      console.log('📤 Enviando datos completos al PasajeController:', datosCompletos)
-
       const response = await fetch('/api/pasajes', {
         method: 'POST',
         headers: {
@@ -1485,7 +1449,6 @@ export default {
       })
 
       const result = await response.json()
-      console.log('📥 Respuesta del servidor:', result)
 
       if (!result.success) {
         throw new Error(result.message || 'Error al guardar los datos')
@@ -1513,7 +1476,6 @@ export default {
       }
       this.detalleActualId = null
       this.puedeGenerarImagen = false
-      
       this.limpiarPagoMixto()
       this.cantidadCliente = 0
       this.vuelto = 0
@@ -1531,17 +1493,10 @@ export default {
       }
     },
 
-    refresharListas() {
-      this.cargarEmbarcacionesYPuertos()
-    },
-
     mostrarMensaje(texto, tipo = 'info') {
       this.mensaje = texto
       this.tipoMensaje = tipo
-      
-      setTimeout(() => {
-        this.cerrarMensaje()
-      }, 5000)
+      setTimeout(() => this.cerrarMensaje(), 5000)
     },
 
     cerrarMensaje() {
@@ -1555,20 +1510,6 @@ export default {
         this.validarImagen()
       },
       deep: true
-    },
-    
-    embarcaciones: {
-      handler(newVal) {
-        console.log('Embarcaciones actualizadas:', newVal.length)
-      },
-      immediate: true
-    },
-    
-    puertosEmbarque: {
-      handler(newVal) {
-        console.log('Puertos actualizados:', newVal.length)
-      },
-      immediate: true
     }
   }
 }
@@ -1576,146 +1517,109 @@ export default {
 
 <style scoped>
 .detalles-pasaje-container {
-  background: #f8f9fa;
-  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
   margin-bottom: 25px;
-  padding: 20px 0;
-  border-bottom: 2px solid #dee2e6;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .header-section h2 {
-  margin: 0;
-  font-size: 28px;
+  margin: 0 0 20px 0;
   color: #333;
+  font-size: 28px;
   font-weight: 600;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.btn-imagen, .btn-ticket, .btn-secondary {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
 }
 
 .btn-imagen {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #17a2b8, #138496);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-}
-
-.btn-imagen:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(23,162,184,0.3);
-}
-
-.btn-imagen:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .btn-ticket {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: linear-gradient(135deg, #f093fb, #f5576c);
   color: white;
-}
-
-.btn-ticket:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(40,167,69,0.3);
-}
-
-.btn-ticket:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .btn-secondary {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #6c757d, #545b62);
+  background: #6c757d;
   color: white;
 }
 
-.btn-secondary:hover {
+.btn-imagen:hover, .btn-ticket:hover, .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(108,117,125,0.3);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.btn-imagen:disabled, .btn-ticket:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .detalles-table-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 15px;
   padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .table-wrapper {
   overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
 }
 
 .detalles-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+}
+
+.detalles-table thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
 }
 
 .detalles-table th {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 15px 12px;
+  padding: 15px;
   text-align: center;
   font-weight: 600;
-  border-bottom: 2px solid #5a67d8;
 }
 
 .detalles-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f1f3f4;
-  vertical-align: middle;
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.text-center { 
-  text-align: center; 
-}
-
-.text-right { 
-  text-align: right; 
+.detalles-table tbody tr:hover {
+  background: #f8f9fa;
 }
 
 .subtotal {
@@ -1725,27 +1629,20 @@ export default {
 
 .no-items {
   text-align: center;
-  padding: 50px 20px;
-  color: #999;
+  padding: 40px;
+  color: #6c757d;
 }
 
 .no-items i {
-  font-size: 36px;
+  font-size: 48px;
+  color: #dee2e6;
   margin-bottom: 15px;
-  color: #ccc;
-}
-
-.no-items p {
-  margin: 0;
-  font-size: 16px;
 }
 
 .total-section {
   margin-top: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-radius: 8px;
-  border: 2px solid #28a745;
+  padding-top: 20px;
+  border-top: 2px solid #dee2e6;
 }
 
 .total-row {
@@ -1765,17 +1662,13 @@ export default {
   font-size: 28px;
   font-weight: 700;
   color: #28a745;
-  background: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .form-section {
   background: white;
-  border-radius: 12px;
+  border-radius: 15px;
   padding: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .form-grid {
@@ -1803,151 +1696,175 @@ export default {
   font-size: 14px;
 }
 
+.input-with-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+}
+
+.form-select, .form-input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus, .form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+  background: white;
+}
+
+.edit-input {
+  background: #fff3cd !important;
+  border-color: #ffc107 !important;
+}
+
+.btn-edit-inline, .btn-save-inline, .btn-cancel-inline {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.btn-edit-inline {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-save-inline {
+  background: #28a745;
+  color: white;
+}
+
+.btn-cancel-inline {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-edit-inline:hover {
+  background: #138496;
+  transform: scale(1.05);
+}
+
+.btn-save-inline:hover {
+  background: #218838;
+  transform: scale(1.05);
+}
+
+.btn-cancel-inline:hover {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+.form-input-locked {
+  background: #e9ecef !important;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
 .cliente-locked-info {
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  border: 2px solid #ffc107;
-  border-radius: 12px;
+  background: #e3f2fd;
+  border-radius: 10px;
   padding: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .locked-header {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: #1976d2;
   font-weight: 600;
-  color: #856404;
-  font-size: 16px;
-}
-
-.locked-header i {
-  color: #ffc107;
-  font-size: 18px;
-}
-
-.form-input-locked {
-  background: #f8f9fa !important;
-  border-color: #e9ecef !important;
-  color: #6c757d !important;
-  cursor: not-allowed;
-  opacity: 0.8;
 }
 
 .locked-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 12px;
   color: #6c757d;
-  font-style: italic;
-  margin-top: 5px;
-}
-
-.locked-indicator i {
-  color: #17a2b8;
-  font-size: 14px;
-}
-
-.form-input, .form-select {
-  padding: 12px 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.3s ease;
-}
-
-.form-input:focus, .form-select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  margin-top: 4px;
 }
 
 .form-textarea {
   padding: 12px 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 80px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #f8f9fa;
   font-family: inherit;
-  transition: border-color 0.3s ease;
+  resize: vertical;
+  transition: all 0.3s ease;
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+  background: white;
 }
 
 .payment-methods {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 15px;
+  margin-bottom: 10px;
 }
 
 .radio-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 10px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .radio-group:hover {
-  background-color: #f8f9fa;
+  border-color: #667eea;
+  background: #f8f9fa;
 }
 
 .radio-group input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #007bff;
-  pointer-events: none;
-}
-
-.radio-group label {
-  font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
-  pointer-events: none;
 }
 
 .checkbox-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  width: fit-content;
 }
 
 .checkbox-group:hover {
-  background-color: #f8f9fa;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #007bff;
-  pointer-events: none;
-}
-
-.checkbox-group label {
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  pointer-events: none;
+  border-color: #667eea;
+  background: #f8f9fa;
 }
 
 .payment-summary {
   margin-top: 15px;
-  padding: 12px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-  border: 2px solid #2196f3;
+  padding: 15px;
+  background: #e8f5e9;
+  border-radius: 10px;
+  border-left: 4px solid #28a745;
 }
 
 .payment-info {
@@ -1955,52 +1872,84 @@ export default {
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  color: #1976d2;
-  margin-bottom: 8px;
+  color: #155724;
 }
 
 .payment-info.mixed {
-  color: #8e24aa;
-}
-
-.payment-info i {
-  font-size: 18px;
+  color: #856404;
 }
 
 .payment-breakdown {
-  font-size: 13px;
-  color: #666;
-  margin-left: 28px;
-  padding: 4px 0;
+  margin-top: 8px;
+  padding-left: 30px;
+  color: #155724;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 2px solid #e9ecef;
+}
+
+.btn-save-all, .btn-cancel-form {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-save-all {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+}
+
+.btn-cancel-form {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-save-all:hover, .btn-cancel-form:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  backdrop-filter: blur(4px);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+  border-radius: 20px;
   width: 90%;
+  max-width: 550px;
   max-height: 90vh;
-  overflow: hidden;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.3);
   animation: modalSlideIn 0.3s ease-out;
 }
 
 .modal-mixto {
-  max-width: 600px;
+  max-width: 650px;
+  max-height: 85vh;
 }
 
 @keyframes modalSlideIn {
@@ -2017,124 +1966,92 @@ export default {
 .modal-header {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-  padding: 20px 25px;
+  padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-radius: 20px 20px 0 0;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 20px;
-  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.modal-header h3 i {
-  font-size: 24px;
+  gap: 10px;
 }
 
 .btn-close-modal {
   background: none;
   border: none;
   color: white;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  padding: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .btn-close-modal:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.2);
+  transform: rotate(90deg);
 }
 
 .modal-body {
-  padding: 25px;
-  max-height: 60vh;
-  overflow-y: auto;
+  padding: 30px;
 }
 
-.modal-footer {
-  padding: 20px 25px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  background: #f8f9fa;
-}
-
-.pago-efectivo-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.total-pagar, .cantidad-cliente, .vuelto-display {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.total-pagar label, .cantidad-cliente label, .vuelto-display label {
-  font-weight: 600;
-  color: #333;
-  font-size: 16px;
-}
-
-.amount-display {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
-  padding: 15px 20px;
-  border-radius: 10px;
-  font-size: 24px;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-}
-
-.amount-display.negative {
-  background: linear-gradient(135deg, #dc3545, #c82333);
-  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
-}
-
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #dc3545;
-  font-size: 14px;
-  font-weight: 500;
-  margin-top: 8px;
-}
-
-.error-message i {
-  font-size: 16px;
-}
-
-.pago-mixto-content {
+.pago-efectivo-content, .pago-mixto-content {
   display: flex;
   flex-direction: column;
   gap: 25px;
 }
 
-.total-mixto {
+.total-pagar, .total-mixto {
   text-align: center;
 }
 
-.total-mixto label {
-  font-weight: 600;
-  color: #333;
-  font-size: 18px;
+.total-pagar label, .total-mixto label {
   display: block;
   margin-bottom: 10px;
+  font-weight: 600;
+  color: #555;
+}
+
+.amount-display {
+  font-size: 32px;
+  font-weight: 700;
+  color: #28a745;
+  background: #e8f5e9;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.amount-display.negative {
+  color: #dc3545;
+  background: #f8d7da;
+}
+
+.cantidad-cliente label {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.vuelto-display {
+  text-align: center;
 }
 
 .payment-breakdown-form {
-  display: grid;
-  gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 10px;
 }
 
 .payment-method-input {
@@ -2146,82 +2063,63 @@ export default {
 .payment-method-input label {
   font-weight: 600;
   color: #555;
-  font-size: 15px;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.payment-method-input label i {
-  font-size: 18px;
-  width: 20px;
-  text-align: center;
-}
-
-.payment-method-input input {
-  padding: 12px 15px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-
-.payment-method-input input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  gap: 8px;
 }
 
 .total-calculado {
   background: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
-  border: 2px solid #dee2e6;
+  padding: 25px;
+  border-radius: 10px;
+  margin-top: 5px;
 }
 
 .subtotal-line, .diferencia-line {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  font-size: 16px;
-}
-
-.subtotal-line {
-  font-weight: 500;
-  color: #333;
-  border-bottom: 1px solid #dee2e6;
   margin-bottom: 10px;
-}
-
-.diferencia-line {
-  font-weight: 700;
-  font-size: 18px;
-}
-
-.diferencia-line.success {
-  color: #28a745;
+  font-weight: 600;
 }
 
 .diferencia-line.error {
   color: #dc3545;
 }
 
+.diferencia-line.success {
+  color: #28a745;
+}
+
 .status-text {
   font-size: 14px;
-  font-weight: 500;
   margin-left: 5px;
 }
 
-.amount {
-  font-weight: 700;
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.modal-footer {
+  padding: 20px 30px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  background: #f8f9fa;
+  border-radius: 0 0 20px 20px;
 }
 
 .btn-confirm, .btn-cancel {
   padding: 12px 24px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -2231,98 +2129,54 @@ export default {
 }
 
 .btn-confirm {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: #28a745;
   color: white;
-}
-
-.btn-confirm:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-}
-
-.btn-confirm:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .btn-cancel {
-  background: linear-gradient(135deg, #6c757d, #545b62);
+  background: #6c757d;
   color: white;
 }
 
-.btn-cancel:hover {
+.btn-confirm:hover, .btn-cancel:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
 }
 
-.form-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-}
-
-.btn-save-all, .btn-cancel-form {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.btn-save-all {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
-  color: white;
-}
-
-.btn-cancel-form {
-  background: linear-gradient(135deg, #6c757d, #545b62);
-  color: white;
-}
-
-.btn-save-all:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(40,167,69,0.3);
-}
-
-.btn-cancel-form:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(108,117,125,0.3);
+.btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.95);
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 2000;
 }
 
 .loading-spinner {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
   text-align: center;
-  color: #007bff;
 }
 
 .spinner {
   width: 50px;
   height: 50px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border-top: 4px solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+  margin: 0 auto 20px;
 }
 
 @keyframes spin {
@@ -2330,210 +2184,111 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
-.loading-spinner p {
-  font-size: 16px;
-  margin: 0;
-  font-weight: 500;
-}
-
 .notification {
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  padding: 15px 25px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  z-index: 1001;
-  min-width: 300px;
-  animation: slideIn 0.3s ease-out;
+  gap: 12px;
+  z-index: 3000;
+  animation: slideInRight 0.3s ease-out;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-@keyframes slideIn {
+@keyframes slideInRight {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateX(100px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateX(0);
   }
 }
 
 .notification.success {
   background: #d4edda;
   color: #155724;
-  border-left: 4px solid #28a745;
+  border: 2px solid #c3e6cb;
 }
 
 .notification.error {
   background: #f8d7da;
   color: #721c24;
-  border-left: 4px solid #dc3545;
+  border: 2px solid #f5c6cb;
 }
 
 .notification.warning {
   background: #fff3cd;
   color: #856404;
-  border-left: 4px solid #ffc107;
+  border: 2px solid #ffeaa7;
 }
 
 .notification.info {
-  background: #cce7ff;
-  color: #004085;
-  border-left: 4px solid #007bff;
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 2px solid #bee5eb;
 }
 
 .btn-close-notification {
   background: none;
   border: none;
-  color: currentColor;
   cursor: pointer;
-  padding: 0;
-  margin-left: auto;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+  font-size: 18px;
+  color: inherit;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
 }
 
 .btn-close-notification:hover {
-  opacity: 1;
-}
-
-@media (max-width: 1024px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .detalles-pasaje-container {
-    padding: 15px;
-  }
-  
-  .header-section {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-  
-  .modal-content {
-    width: 95%;
-    margin: 10px;
-  }
+  background: rgba(0,0,0,0.1);
 }
 
 @media (max-width: 768px) {
-  .form-actions {
-    flex-direction: column;
+  .detalles-pasaje-container {
+    padding: 15px;
   }
-  
-  .btn-save-all, .btn-cancel-form {
-    width: 100%;
-    justify-content: center;
-  }
-  
+
   .header-actions {
     flex-direction: column;
-    width: 100%;
   }
-  
+
   .btn-imagen, .btn-ticket, .btn-secondary {
     width: 100%;
     justify-content: center;
   }
-  
-  .detalles-table {
-    font-size: 12px;
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
-  
-  .detalles-table th,
-  .detalles-table td {
-    padding: 8px 6px;
-  }
-  
-  .total-section {
-    padding: 15px;
-  }
-  
-  .total-label {
-    font-size: 16px;
-  }
-  
-  .total-amount {
-    font-size: 20px;
-    padding: 8px 15px;
-  }
-  
-  .notification {
-    right: 10px;
-    left: 10px;
-    min-width: auto;
-  }
-  
-  .modal-header h3 {
-    font-size: 18px;
-  }
-  
-  .modal-body {
-    padding: 20px;
-  }
-  
-  .modal-footer {
+
+  .payment-methods {
     flex-direction: column;
-    gap: 10px;
   }
-  
-  .btn-confirm, .btn-cancel {
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-save-all, .btn-cancel-form {
     width: 100%;
     justify-content: center;
   }
-}
-@media (max-width: 480px) {
-  .detalles-pasaje-container {
-    padding: 10px;
-  }
-  
-  .header-section h2 {
-    font-size: 22px;
-  }
-  
-  .form-section {
-    padding: 20px;
-  }
-  
-  .detalles-table-section {
-    padding: 15px;
-  }
-  
-  .payment-methods {
-    gap: 8px;
-  }
-  
-  .radio-group, .checkbox-group {
-    font-size: 13px;
-  }
-  
+
   .modal-content {
-    width: 98%;
-    margin: 5px;
+    width: 95%;
+    margin: 20px;
   }
-  
-  .modal-header {
-    padding: 15px 20px;
-  }
-  
-  .modal-body {
-    padding: 15px;
-  }
-  
-  .amount-display {
-    font-size: 20px;
-    padding: 12px 15px;
-  }
-  
-  .payment-breakdown-form {
-    gap: 12px;
+
+  .notification {
+    left: 15px;
+    right: 15px;
+    top: 15px;
   }
 }
 </style>

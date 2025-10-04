@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>{{ $tipo_documento }} - {{ $numero_boleta }}</title>
+    <title>ROCÍO TRAVEL - PASAJE FLUVIAL</title>
     <style>
         * {
             margin: 0;
@@ -11,411 +11,650 @@
         }
         
         body { 
-            font-family: Arial, sans-serif; 
-            background: white; 
+            font-family: 'Arial', sans-serif; 
+            background: #f5f5f5; 
             font-size: 11px;
             line-height: 1.4;
+            color: #000;
         }
         
         .page {
             width: 210mm;
-            margin: 0 auto;
-            padding: 10mm;
+            margin: 20px auto;
+            background: white;
         }
         
+        /* BOTÓN DE DESCARGA */
+        .download-section {
+            background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .btn-download {
+            background: #fff;
+            color: #0369a1;
+            border: none;
+            padding: 8px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 6px;
+        }
+        
+        .btn-download:hover {
+            background: #f0f9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.3);
+        }
+        
+        .btn-download:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .download-info {
+            color: #fff;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* TICKET PRINCIPAL */
         .ticket {
-            border: 2px solid #000;
-            padding: 10mm;
+            border: 3px solid #0369a1;
             background: white;
             position: relative;
         }
         
-        /* ENCABEZADO */
-        .header-section {
-            position: relative;
-            width: 100%;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 12px;
-            min-height: 100px;
+        /* HEADER CON TÍTULO CENTRADO Y LOGO */
+        .header-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 2px solid #0891b2;
+            background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+            gap: 20px;
+        }
+        
+        .logo-container {
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        .header-logo {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 85px;
-        }
-        
-        .logo-container {
-            border: 2px solid #00a0e3;
-            border-radius: 8px;
-            padding: 6px;
-            background: white;
-            display: inline-block;
-        }
-        
         .logo-img {
-            width: 70px;
-            height: auto;
-            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            padding: 5px;
+            background: white;
         }
         
         .header-center {
             text-align: center;
-            max-width: 550px;
         }
         
-        .logo-empresa {
-            font-size: 20px;
-            font-weight: bold;
-            color: #c41e3a;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        .company-name {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            color: #fff;
         }
         
-        .subtitulo {
-            font-size: 10px;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #000;
-        }
-        
-        .info-empresa {
-            font-size: 8px;
-            line-height: 1.5;
-            color: #333;
-        }
-        
-        .info-empresa p {
-            margin: 2px 0;
-        }
-        
-        .info-empresa .destinos {
+        .company-subtitle {
+            font-size: 11px;
             font-weight: normal;
-            color: #555;
+            letter-spacing: 1px;
+            color: #f0f9ff;
+            text-transform: uppercase;
         }
         
-        .info-empresa .ubicacion {
-            color: #00a0e3;
-            font-weight: bold;
+        /* INFORMACIÓN DE LA EMPRESA */
+        .company-info {
+            padding: 10px 20px;
+            border-bottom: 1px solid #0891b2;
+            background: #f0f9ff;
             font-size: 9px;
-            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        /* FECHA DE EMISIÓN */
-        .fecha-emision {
-            text-align: center;
-            padding: 8px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            margin: 10px 0;
-            font-size: 10px;
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        .fecha-emision strong {
-            color: #c41e3a;
+        .info-label {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 8px;
+            color: #0369a1;
         }
         
         /* DATOS DEL CLIENTE */
-        .datos-pasaje {
-            margin: 12px 0;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
+        .client-section {
+            padding: 12px 20px;
+            border-bottom: 1px solid #0891b2;
         }
         
-        .fila-datos {
-            display: table;
-            width: 100%;
-            margin: 5px 0;
+        .section-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 8px;
         }
         
-        .columna-dato {
-            display: table-cell;
-            padding: 3px 8px;
+        .section-row:last-child {
+            margin-bottom: 0;
         }
         
-        .columna-dato.col-25 { width: 25%; }
-        .columna-dato.col-33 { width: 33.33%; }
-        .columna-dato.col-50 { width: 50%; }
-        .columna-dato.col-75 { width: 75%; }
+        .field-group {
+            flex: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
         
-        .label-dato {
+        .field-label {
             font-weight: bold;
             font-size: 9px;
-            color: #555;
-            display: block;
+            text-transform: uppercase;
+            min-width: fit-content;
+            color: #0369a1;
         }
         
-        .valor-dato {
-            font-size: 11px;
-            color: #000;
-            display: block;
-            margin-top: 2px;
+        .field-value {
+            flex: 1;
+            border-bottom: 1px solid #0891b2;
+            padding-bottom: 2px;
+            font-size: 10px;
+            min-height: 16px;
         }
         
         /* TABLA DE SERVICIOS */
-        .tabla-servicios {
+        .services-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 12px 0;
-            font-size: 10px;
         }
         
-        .tabla-servicios thead {
-            background: #2c3e50;
-            color: white;
+        .services-table thead {
+            background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+            color: #fff;
         }
         
-        .tabla-servicios th {
-            padding: 8px;
-            text-align: left;
+        .services-table th {
+            padding: 8px 15px;
+            text-align: center;
             font-weight: bold;
-            border: 1px solid #000;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid #0369a1;
+        }
+        
+        .services-table th:last-child {
+            border-right: none;
+        }
+        
+        .services-table th.desc-header {
+            text-align: left;
+        }
+        
+        .services-table tbody td {
+            padding: 15px;
+            border-bottom: 1px solid #e0f2fe;
+            border-right: 1px solid #e0f2fe;
             font-size: 10px;
+            text-align: center;
         }
         
-        .tabla-servicios td {
-            padding: 10px 8px;
-            border: 1px solid #ddd;
+        .services-table tbody td:last-child {
+            border-right: none;
         }
         
-        .tabla-servicios .col-cantidad { 
-            width: 10%; 
-            text-align: center; 
+        .service-description {
+            font-weight: bold;
+            margin-bottom: 3px;
+            text-align: center;
+            color: #0369a1;
         }
         
-        .tabla-servicios .col-descripcion { 
-            width: 60%; 
+        .service-detail {
+            font-size: 9px;
+            color: #64748b;
+            text-align: center;
         }
         
-        .tabla-servicios .col-precio { 
-            width: 15%; 
-            text-align: right; 
+        /* SECCIÓN DE TOTAL */
+        .total-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            border-top: 2px solid #0891b2;
         }
         
-        .tabla-servicios .col-subtotal { 
-            width: 15%; 
-            text-align: right; 
+        .payment-details {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f0f9ff;
         }
         
-        /* TOTAL */
-        .seccion-total {
-            text-align: right;
-            margin-top: 12px;
-            padding: 12px;
-            background: #f8f8f8;
-            border: 2px solid #000;
+        .payment-title {
+            font-weight: bold;
+            font-size: 9px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            color: #0369a1;
+        }
+        
+        .payment-info {
+            font-size: 9px;
+            line-height: 1.6;
+            color: #334155;
+        }
+        
+        .total-box {
+            background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+            color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: 200px;
         }
         
         .total-label {
-            font-size: 16px;
-            font-weight: bold;
-            display: inline-block;
-            min-width: 100px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .total-monto {
+        .total-amount {
             font-size: 20px;
             font-weight: bold;
-            color: #c41e3a;
-            display: inline-block;
         }
         
-        /* DETALLES DE PAGO */
-        .detalles-pago {
-            margin-top: 12px;
-            padding: 10px;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 3px;
+        /* DETALLES DEL VIAJE */
+        .travel-details {
+            padding: 12px 20px;
+            background: #f0f9ff;
+            border-top: 1px solid #0891b2;
+            display: flex;
+            justify-content: space-around;
         }
         
-        .detalles-pago .titulo-seccion {
-            font-weight: bold;
-            font-size: 10px;
-            margin-bottom: 6px;
-            color: #c41e3a;
-        }
-        
-        /* FOOTER */
-        .footer-ticket {
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+        .travel-item {
             text-align: center;
-            font-size: 8px;
-            color: #666;
-            line-height: 1.6;
         }
         
-        .footer-advertencia {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 8px;
-            margin-top: 10px;
+        .travel-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+        
+        .travel-value {
+            font-size: 11px;
+            font-weight: bold;
+            color: #0369a1;
+        }
+        
+        /* TÉRMINOS Y CONDICIONES */
+        .terms-section {
+            padding: 12px 20px;
+            background: #fff;
+            border-top: 1px solid #0891b2;
+        }
+        
+        .terms-title {
+            font-weight: bold;
+            font-size: 9px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+            color: #0369a1;
+        }
+        
+        .terms-text {
+            font-size: 8px;
+            line-height: 1.5;
+            color: #334155;
+            text-align: justify;
+        }
+        
+        /* FOOTER NEGRO */
+        .footer-black {
+            background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+            color: #fff;
+            padding: 10px;
             text-align: center;
             font-size: 9px;
             font-weight: bold;
-            line-height: 1.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .footer-rojo {
-            background: #c41e3a;
-            color: white;
+        /* FOOTER INFERIOR */
+        .footer-bottom {
+            background: #0369a1;
+            color: #fff;
             padding: 8px;
-            margin-top: 10px;
             text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
+            font-size: 8px;
+            letter-spacing: 0.5px;
         }
         
         @media print {
-            body { margin: 0; }
-            .page { margin: 0; padding: 5mm; }
-            .ticket { page-break-inside: avoid; }
+            body { 
+                margin: 0; 
+                background: white;
+            }
+            .page { 
+                margin: 0; 
+                width: 100%;
+            }
+            .download-section { 
+                display: none; 
+            }
+            .ticket { 
+                page-break-inside: avoid; 
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .page {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .download-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .header-center {
+                padding: 0 20px;
+            }
+            
+            .logo-left {
+                position: static;
+                margin-bottom: 10px;
+            }
+            
+            .header-main {
+                flex-direction: column;
+            }
+            
+            .total-section {
+                flex-direction: column;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="page">
+        <!-- BOTÓN DE DESCARGA -->
+        <div class="download-section">
+            <button class="btn-download" onclick="descargarImagenPNG()">
+                <i class="fas fa-download"></i>
+                Descargar PNG
+            </button>
+            <div class="download-info">
+                <i class="fas fa-info-circle"></i> Descarga tu pasaje en alta calidad
+            </div>
+        </div>
+        
         <div class="ticket">
-            <!-- ENCABEZADO -->
-            <div class="header-section">
-                <!-- Logo a la izquierda más pequeño -->
-                <div class="header-logo">
-                    <div class="logo-container">
-                        <img src="{{ asset('images/rocio.jpg') }}" alt="Logo Rocío Travel" class="logo-img">
-                    </div>
+            <!-- HEADER PRINCIPAL CON LOGO Y TÍTULO CENTRADO -->
+            <div class="header-main">
+                <div class="logo-container">
+                    <img src="{{ asset('images/rocio.jpg') }}" alt="Logo Rocío Travel" class="logo-img">
                 </div>
-                
-                <!-- Información CENTRADA y más compacta -->
                 <div class="header-center">
-                    <div class="logo-empresa">ROCÍO TRAVEL</div>
-                    <div class="subtitulo">VENTA DE PASAJES FLUVIALES</div>
-                    <div class="info-empresa">
-                        <p class="destinos"><strong>IQUITOS - YURIMAGUAS - PUCALLPA - SANTA ROSA - INTUTO - SAN LORENZO,</strong></p>
-                        <p class="destinos"><strong>TROMPETEROS - PANTOJA - REQUENA - Y PUERTOS INTERMEDIOS</strong></p>
-                        <p style="margin-top: 5px;"><strong>Dirección:</strong> Calle. Pevas N° 366</p>
-                        <p><strong>Correo:</strong> travelrocio19@gmail.com</p>
-                        <p><strong>Contacto:</strong> +51901978379</p>
-                        <p><strong>Yape:</strong> 989667653</p>
-                        <p class="ubicacion">IQUITOS - MAYNAS - LORETO</p>
-                    </div>
+                    <div class="company-name">ROCÍO TRAVEL</div>
+                    <div class="company-subtitle">Venta de Pasajes Fluviales</div>
                 </div>
             </div>
             
-            <!-- FECHA DE EMISIÓN Y MEDIO DE PAGO -->
-            <div class="fecha-emision">
-                <strong>Fecha de emisión:</strong> {{ $fecha_emision }} | 
-                <strong>Medio de pago:</strong> {{ $medio_pago ?? 'EFECTIVO' }}
+            <!-- INFORMACIÓN DE LA EMPRESA -->
+            <div class="company-info">
+                <div class="info-item">
+                    <span class="info-label">Dirección:</span>
+                    <span>Calle Pevas N° 366, Iquitos</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Contacto:</span>
+                    <span>+51 901 978 379</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span>travelrocio19@gmail.com</span>
+                </div>
             </div>
             
             <!-- DATOS DEL CLIENTE -->
-            <div class="datos-pasaje">
-                <div class="fila-datos">
-                    <div class="columna-dato col-75">
-                        <span class="label-dato">CLIENTE:</span>
-                        <span class="valor-dato">{{ strtoupper($cliente['nombre'] ?? 'SIN ESPECIFICAR') }}</span>
+            <div class="client-section">
+                <div class="section-row">
+                    <div class="field-group" style="flex: 2;">
+                        <span class="field-label">Cliente:</span>
+                        <span class="field-value">{{ strtoupper($cliente['nombre'] ?? 'SIN ESPECIFICAR') }}</span>
                     </div>
-                    <div class="columna-dato col-25">
-                        <span class="label-dato">Doc. Identidad:</span>
-                        <span class="valor-dato">{{ $cliente['documento'] ?? '---' }}</span>
+                    <div class="field-group">
+                        <span class="field-label">DNI/CE:</span>
+                        <span class="field-value">{{ $cliente['documento'] ?? '---' }}</span>
+                    </div>
+                </div>
+                <div class="section-row">
+                    <div class="field-group">
+                        <span class="field-label">Fecha emisión:</span>
+                        <span class="field-value">{{ $fecha_emision ?? date('d/m/Y') }}</span>
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">Medio de pago:</span>
+                        <span class="field-value">{{ strtoupper($medio_pago ?? 'EFECTIVO') }}</span>
                     </div>
                 </div>
             </div>
             
-            <!-- TABLA DE SERVICIOS -->
-            <table class="tabla-servicios">
+            <!-- TABLA DE SERVICIOS CON HEADERS Y CONTENIDO CENTRADO -->
+            <table class="services-table">
                 <thead>
                     <tr>
-                        <th class="col-cantidad">Cantidad</th>
-                        <th class="col-descripcion">Descripción</th>
-                        <th class="col-precio">Precio Unitario</th>
-                        <th class="col-subtotal">Sub Total</th>
+                        <th style="width: 10%;">CANT</th>
+                        <th style="width: 60%;">DESCRIPCIÓN</th>
+                        <th style="width: 15%;">IMPORTE</th>
+                        <th style="width: 15%;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="col-cantidad">1</td>
-                        <td class="col-descripcion">
-                            <strong>{{ strtoupper($descripcion ?? 'PASAJE FLUVIAL') }}</strong>
+                        <td>1</td>
+                        <td>
+                            <div class="service-description">{{ strtoupper($descripcion ?? 'PASAJE FLUVIAL') }}</div>
                             @if(!empty($embarcacion))
-                            <br>Embarcación: {{ strtoupper($embarcacion) }}
+                            <div class="service-detail">Embarcación: {{ strtoupper($embarcacion) }}</div>
                             @endif
                             @if(!empty($puerto_embarque))
-                            <br>Puerto: {{ strtoupper($puerto_embarque) }}
+                            <div class="service-detail">Puerto de embarque: {{ strtoupper($puerto_embarque) }}</div>
+                            @endif
+                            @if(!empty($destino))
+                            <div class="service-detail">Destino: {{ strtoupper($destino) }}</div>
                             @endif
                         </td>
-                        <td class="col-precio">S/ {{ number_format($total ?? 0, 2) }}</td>
-                        <td class="col-subtotal">S/ {{ number_format($total ?? 0, 2) }}</td>
+                        <td>S/ {{ number_format($total ?? 0, 2) }}</td>
+                        <td>S/ {{ number_format($total ?? 0, 2) }}</td>
                     </tr>
                 </tbody>
             </table>
             
-            <!-- TOTAL -->
-            <div class="seccion-total">
-                <span class="total-label">Total: S/</span>
-                <span class="total-monto">{{ number_format($total ?? 0, 2) }}</span>
-            </div>
-            
-            <!-- DETALLES DE PAGO -->
-            @if(!empty($detalles_pago))
-            <div class="detalles-pago">
-                <div class="titulo-seccion">Nota:</div>
-                <div style="font-size: 9px;">{{ $detalles_pago }}</div>
-            </div>
-            @endif
-            
-            <!-- DETALLES DEL VIAJE -->
-            <div class="detalles-pago">
-                <div class="titulo-seccion">Detalles del viaje:</div>
-                <div class="fila-datos">
-                    <div class="columna-dato col-33">
-                        <span class="label-dato">Fecha de viaje:</span>
-                        <span class="valor-dato">{{ $fecha_viaje ?? '---' }}</span>
+            <!-- SECCIÓN DE TOTAL Y DETALLES DE PAGO -->
+            <div class="total-section">
+                <div class="payment-details">
+                    <div class="payment-title">Observaciones:</div>
+                    <div class="payment-info">
+                        {{ $detalles_pago ?? 'Pasaje válido únicamente para la fecha y hora indicada. No incluye alimentación.' }}
                     </div>
-                    <div class="columna-dato col-33">
-                        <span class="label-dato">Hora de embarque:</span>
-                        <span class="valor-dato">{{ $hora_embarque ?? '---' }}</span>
-                    </div>
-                    <div class="columna-dato col-33">
-                        <span class="label-dato">Hora de salida:</span>
-                        <span class="valor-dato">{{ $hora_salida ?? '---' }}</span>
-                    </div>
+                </div>
+                <div class="total-box">
+                    <span class="total-label">Total S/</span>
+                    <span class="total-amount">{{ number_format($total ?? 0, 2) }}</span>
                 </div>
             </div>
             
-            <!-- ADVERTENCIA -->
-            <div class="footer-advertencia">
-                La empresa no aceptará devoluciones una vez realizada la venta y separado el cupo<br>
-                en caso que la embarcación haya partido y Ud. no aborde,<br>
-                perderá su derecho a viajar y el valor de su pasaje.
+            <!-- DETALLES DEL VIAJE -->
+            <div class="travel-details">
+                <div class="travel-item">
+                    <div class="travel-label">Fecha de viaje</div>
+                    <div class="travel-value">{{ $fecha_viaje ?? '---' }}</div>
+                </div>
+                <div class="travel-item">
+                    <div class="travel-label">Hora de embarque</div>
+                    <div class="travel-value">{{ $hora_embarque ?? '---' }}</div>
+                </div>
+                <div class="travel-item">
+                    <div class="travel-label">Hora de salida</div>
+                    <div class="travel-value">{{ $hora_salida ?? '---' }}</div>
+                </div>
+                <div class="travel-item">
+                    <div class="travel-label">Equipaje permitido</div>
+                    <div class="travel-value">15 KG</div>
+                </div>
             </div>
             
-            <!-- EQUIPAJE -->
-            <div class="footer-rojo">
-                EQUIPAJE: 15KG POR PASAJERO
+            <!-- TÉRMINOS Y CONDICIONES -->
+            <div class="terms-section">
+                <div class="terms-title">Términos y Condiciones:</div>
+                <div class="terms-text">
+                    La empresa no aceptará devoluciones una vez realizada la venta y separado el cupo. En caso que la embarcación haya partido y Ud. no aborde, perderá su derecho a viajar y el valor de su pasaje. El pasajero embarca y desembarca su propio equipaje. La empresa se responsabiliza únicamente de los pasajeros portadores de este pasaje. Este ticket puede ser cambiado por boleta de venta o factura según requerimiento.
+                </div>
             </div>
             
-            <!-- FOOTER -->
-            <div class="footer-ticket">
-                <p>La empresa se responsabiliza solamente de los pasajeros dueños de este pasaje.</p>
-                <p>El pasajero de embarque y saca siempre su propio equipaje.</p>
+            <!-- FOOTER NEGRO -->
+            <div class="footer-black">
+                CONSERVE ESTE PASAJE DURANTE TODO EL VIAJE
             </div>
             
-            <!-- CAMBIO DE TICKET -->
-            <div class="footer-rojo">
-                ESTE TICKET PUEDE SER CAMBIADO POR BOLETA DE VENTA O FACTURA
+            <!-- FOOTER INFERIOR -->
+            <div class="footer-bottom">
+                IQUITOS • YURIMAGUAS • PUCALLPA • SANTA ROSA • Y TODOS LOS PUERTOS INTERMEDIOS
             </div>
         </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        let descargando = false;
+        
+        function descargarImagenPNG() {
+            if (descargando) {
+                return;
+            }
+            
+            descargando = true;
+            const boton = document.querySelector('.btn-download');
+            const textoOriginal = boton.innerHTML;
+            
+            boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            boton.disabled = true;
+            
+            const ticket = document.querySelector('.ticket');
+            
+            const opciones = {
+                scale: 3,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: ticket.scrollWidth,
+                height: ticket.scrollHeight,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: ticket.scrollWidth,
+                windowHeight: ticket.scrollHeight,
+                onclone: function(clonedDoc) {
+                    const clonedTicket = clonedDoc.querySelector('.ticket');
+                    if (clonedTicket) {
+                        clonedTicket.style.transform = 'scale(1)';
+                        clonedTicket.style.width = '100%';
+                    }
+                }
+            };
+            
+            html2canvas(ticket, opciones).then(function(canvas) {
+                try {
+                    canvas.toBlob(function(blob) {
+                        const link = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        
+                        const fecha = new Date();
+                        const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`;
+                        const horaStr = `${String(fecha.getHours()).padStart(2, '0')}${String(fecha.getMinutes()).padStart(2, '0')}${String(fecha.getSeconds()).padStart(2, '0')}`;
+                        
+                        const nombreClienteElement = document.querySelector('.field-value');
+                        let nombreCliente = 'Cliente';
+                        if (nombreClienteElement) {
+                            nombreCliente = nombreClienteElement.textContent.trim().replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+                        }
+                        
+                        const nombreArchivo = `Pasaje_Rocio_Travel_${nombreCliente}_${fechaStr}_${horaStr}.png`;
+                        
+                        link.download = nombreArchivo;
+                        link.href = url;
+                        link.style.display = 'none';
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        setTimeout(() => {
+                            URL.revokeObjectURL(url);
+                            boton.innerHTML = textoOriginal;
+                            boton.disabled = false;
+                            descargando = false;
+                        }, 500);
+                        
+                    }, 'image/png', 1.0);
+                    
+                } catch (error) {
+                    console.error('Error al descargar:', error);
+                    boton.innerHTML = textoOriginal;
+                    boton.disabled = false;
+                    descargando = false;
+                }
+            }).catch(function(error) {
+                console.error('Error en html2canvas:', error);
+                boton.innerHTML = textoOriginal;
+                boton.disabled = false;
+                descargando = false;
+            });
+        }
+    </script>
 </body>
 </html>

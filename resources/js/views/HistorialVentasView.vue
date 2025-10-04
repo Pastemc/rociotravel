@@ -163,6 +163,11 @@
               <span class="badge-pago" :class="venta.medio_pago || 'efectivo'">
                 {{ textoPago(venta.medio_pago) }}
               </span>
+              <div v-if="venta.medio_pago === 'mixto' && venta.detalle_pago_mixto" class="detalle-mixto">
+                <small v-for="(monto, medio) in venta.detalle_pago_mixto" :key="medio">
+                  {{ medio }}: S/{{ parseFloat(monto).toFixed(2) }}
+                </small>
+              </div>
             </td>
             <td class="monto">S/ {{ parseFloat(venta.subtotal || 0).toFixed(2) }}</td>
             <td class="ganancia-monto">S/ {{ calcularGananciaVenta(venta).toFixed(2) }}</td>
@@ -224,6 +229,16 @@
               <span class="badge-estado" :class="ventaSeleccionada.estado || 'activo'">
                 {{ textoEstado(ventaSeleccionada.estado) }}
               </span>
+            </div>
+            <div v-if="ventaSeleccionada.medio_pago === 'mixto' && ventaSeleccionada.detalle_pago_mixto" class="detalle-pago-mixto">
+              <strong>Detalle del Pago Mixto:</strong>
+              <div v-for="(monto, medio) in ventaSeleccionada.detalle_pago_mixto" :key="medio" class="medio-pago-detalle">
+                <span>{{ medio.toUpperCase() }}:</span>
+                <span>S/ {{ parseFloat(monto).toFixed(2) }}</span>
+                <span class="ganancia-distribuida">
+                  (Ganancia: S/ {{ distribuirGananciaMixto(ventaSeleccionada.detalle_pago_mixto, calcularGananciaVenta(ventaSeleccionada))[medio]?.toFixed(2) || '0.00' }})
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -368,34 +383,57 @@ export default {
     },
 
     // Acumuladores por medio de pago - Muestran solo el PRECIO ORIGINAL (sin tu ganancia)
-    // Fórmula: Total cobrado - (cantidad de pasajes × S/ 10)
     totalEfectivoNeto() {
       return this.ventasFiltradas
-        .filter(v => v.estado !== 'anulado' && (v.medio_pago === 'efectivo' || !v.medio_pago))
+        .filter(v => v.estado !== 'anulado')
         .reduce((total, v) => {
-          const totalCobrado = parseFloat(v.subtotal || 0)
-          const ganancia = this.calcularGananciaVenta(v)
-          return total + (totalCobrado - ganancia)
+          if (v.medio_pago === 'efectivo' || !v.medio_pago) {
+            const totalCobrado = parseFloat(v.subtotal || 0)
+            const ganancia = this.calcularGananciaVenta(v)
+            return total + (totalCobrado - ganancia)
+          } else if (v.medio_pago === 'mixto' && v.detalle_pago_mixto?.efectivo) {
+            const montoEfectivo = parseFloat(v.detalle_pago_mixto.efectivo) || 0
+            const gananciaTotal = this.calcularGananciaVenta(v)
+            const distribucion = this.distribuirGananciaMixto(v.detalle_pago_mixto, gananciaTotal)
+            return total + (montoEfectivo - (distribucion.efectivo || 0))
+          }
+          return total
         }, 0)
     },
 
     totalYapeNeto() {
       return this.ventasFiltradas
-        .filter(v => v.estado !== 'anulado' && v.medio_pago === 'yape')
+        .filter(v => v.estado !== 'anulado')
         .reduce((total, v) => {
-          const totalCobrado = parseFloat(v.subtotal || 0)
-          const ganancia = this.calcularGananciaVenta(v)
-          return total + (totalCobrado - ganancia)
+          if (v.medio_pago === 'yape') {
+            const totalCobrado = parseFloat(v.subtotal || 0)
+            const ganancia = this.calcularGananciaVenta(v)
+            return total + (totalCobrado - ganancia)
+          } else if (v.medio_pago === 'mixto' && v.detalle_pago_mixto?.yape) {
+            const montoYape = parseFloat(v.detalle_pago_mixto.yape) || 0
+            const gananciaTotal = this.calcularGananciaVenta(v)
+            const distribucion = this.distribuirGananciaMixto(v.detalle_pago_mixto, gananciaTotal)
+            return total + (montoYape - (distribucion.yape || 0))
+          }
+          return total
         }, 0)
     },
 
     totalPlinNeto() {
       return this.ventasFiltradas
-        .filter(v => v.estado !== 'anulado' && v.medio_pago === 'plin')
+        .filter(v => v.estado !== 'anulado')
         .reduce((total, v) => {
-          const totalCobrado = parseFloat(v.subtotal || 0)
-          const ganancia = this.calcularGananciaVenta(v)
-          return total + (totalCobrado - ganancia)
+          if (v.medio_pago === 'plin') {
+            const totalCobrado = parseFloat(v.subtotal || 0)
+            const ganancia = this.calcularGananciaVenta(v)
+            return total + (totalCobrado - ganancia)
+          } else if (v.medio_pago === 'mixto' && v.detalle_pago_mixto?.plin) {
+            const montoPlin = parseFloat(v.detalle_pago_mixto.plin) || 0
+            const gananciaTotal = this.calcularGananciaVenta(v)
+            const distribucion = this.distribuirGananciaMixto(v.detalle_pago_mixto, gananciaTotal)
+            return total + (montoPlin - (distribucion.plin || 0))
+          }
+          return total
         }, 0)
     },
 
@@ -434,6 +472,44 @@ export default {
     calcularGananciaVenta(venta) {
       const cantidad = parseInt(venta.cantidad || 1)
       return this.gananciaPorPasaje * cantidad
+    },
+
+    // Distribuir ganancia en pagos mixtos
+    distribuirGananciaMixto(detallePago, gananciaTotal) {
+      const mediosOrdenados = Object.entries(detallePago)
+        .filter(([_, monto]) => parseFloat(monto) > 0)
+        .sort((a, b) => parseFloat(b[1]) - parseFloat(a[1]))
+
+      const distribucion = {}
+
+      if (mediosOrdenados.length === 1) {
+        // Un solo medio: toda la ganancia
+        distribucion[mediosOrdenados[0][0]] = gananciaTotal
+      } else if (mediosOrdenados.length === 2) {
+        const [mayor, menor] = mediosOrdenados
+        const montoMayor = parseFloat(mayor[1])
+        const montoMenor = parseFloat(menor[1])
+        const diferencia = montoMayor - montoMenor
+
+        if (diferencia >= gananciaTotal) {
+          // Diferencia >= 10: toda la ganancia del mayor
+          distribucion[mayor[0]] = gananciaTotal
+          distribucion[menor[0]] = 0
+        } else {
+          // Diferencia < 10: distribuir proporcionalmente
+          const mitad = gananciaTotal / 2
+          distribucion[mayor[0]] = mitad
+          distribucion[menor[0]] = mitad
+        }
+      } else {
+        // 3 o más medios: dividir equitativamente
+        const gananciaPorMedio = gananciaTotal / mediosOrdenados.length
+        mediosOrdenados.forEach(([medio]) => {
+          distribucion[medio] = gananciaPorMedio
+        })
+      }
+
+      return distribucion
     },
 
     async cargarDatos() {
@@ -687,7 +763,6 @@ export default {
 </script>
 
 <style scoped>
-/* Tus estilos permanecen exactamente iguales */
 .historial-container {
   padding: 20px;
   background: #f8f9fa;
@@ -1116,6 +1191,17 @@ export default {
   color: #721c24;
 }
 
+.detalle-mixto {
+  margin-top: 5px;
+}
+
+.detalle-mixto small {
+  display: block;
+  font-size: 10px;
+  color: #666;
+  line-height: 1.3;
+}
+
 .acciones {
   display: flex;
   gap: 5px;
@@ -1303,6 +1389,43 @@ export default {
   font-weight: 700;
   color: #ffc107;
   font-size: 18px;
+}
+
+.detalle-pago-mixto {
+  grid-column: 1 / -1;
+  padding: 15px;
+  background: #e9ecef;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.medio-pago-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.medio-pago-detalle:last-child {
+  border-bottom: none;
+}
+
+.medio-pago-detalle span:first-child {
+  font-weight: 600;
+  text-transform: uppercase;
+  min-width: 80px;
+}
+
+.medio-pago-detalle span:nth-child(2) {
+  font-weight: 700;
+  color: #007bff;
+}
+
+.ganancia-distribuida {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
 }
 
 .confirmacion-content {
